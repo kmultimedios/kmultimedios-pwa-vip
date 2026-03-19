@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="KM VIP">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="user-email" content="">
+  <meta name="user-name"  content="">
+
+  <title>KMultimedios VIP</title>
+
+  <link rel="manifest" href="/pwa/manifest.json">
+  <link rel="icon"             href="/pwa/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/pwa/icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/pwa/icons/icon-152.png">
+  <link rel="stylesheet" href="/pwa/css/app.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous">
+</head>
+<body>
+
+<!-- ── Banner de instalación ─────────────────────────────────────────────── -->
+<div id="install-banner" class="install-banner" hidden>
+  <span>Instala la app para acceso rápido</span>
+  <button id="install-btn" class="btn btn--sm btn--accent">Instalar</button>
+</div>
+
+<!-- ── Mensaje global ────────────────────────────────────────────────────── -->
+<div id="global-message" class="message" hidden></div>
+
+<!-- ── Modal confirmación eliminar dispositivo ───────────────────────────── -->
+<div id="modal-overlay" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-icon">⚠️</div>
+    <h3 class="modal-title">¿Eliminar dispositivo?</h3>
+    <p class="modal-desc" id="modal-desc">
+      Esto contará como <strong>1 reemplazo</strong> de tu cuota anual (máx. 2 por año por tipo de dispositivo).
+      Podrás registrar un nuevo dispositivo inmediatamente.
+    </p>
+    <div class="modal-actions">
+      <button id="modal-cancel-btn" class="btn btn--ghost">Cancelar</button>
+      <button id="modal-confirm-btn" class="btn btn--danger">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+
+  <!-- ── CARGANDO ─────────────────────────────────────────────────────────── -->
+  <div id="screen-loading" class="screen active">
+    <div class="splash">
+      <div class="splash__logo">
+        <img src="/pwa/icons/icon-192.png" alt="KMultimedios VIP" class="splash__img">
+        <span class="splash__k">K</span>
+        <span class="splash__brand">MULTIMEDIOS</span>
+        <span class="splash__vip">VIP</span>
+      </div>
+      <div class="loading-spinner"></div>
+      <p class="splash__text">Verificando acceso…</p>
+    </div>
+  </div>
+
+  <!-- ── SIN SESIÓN ───────────────────────────────────────────────────────── -->
+  <div id="screen-login-required" class="screen">
+    <div class="screen-inner screen-inner--centered">
+      <div class="icon-circle icon-circle--warning">🔐</div>
+      <h2>Inicia Sesión</h2>
+      <p>Necesitas iniciar sesión en KMultimedios para acceder a tu app VIP.</p>
+      <a href="https://kmultimedios.com/wp-login.php?redirect_to=/pwa/" class="btn btn--primary btn--full">
+        Iniciar Sesión
+      </a>
+      <a href="https://kmultimedios.com" class="btn btn--ghost btn--full">Ir al sitio web</a>
+    </div>
+  </div>
+
+  <!-- ── NO ES VIP ────────────────────────────────────────────────────────── -->
+  <div id="screen-not-vip" class="screen">
+    <div class="screen-inner screen-inner--centered">
+      <div class="icon-circle icon-circle--error">🚫</div>
+      <h2>Acceso VIP Requerido</h2>
+      <p>Esta aplicación es exclusiva para miembros con membresía activa en KMultimedios.</p>
+      <a href="https://kmultimedios.com/membresia/" class="btn btn--primary btn--full">Ver Planes VIP</a>
+      <a href="https://kmultimedios.com" class="btn btn--ghost btn--full">Ir al sitio web</a>
+    </div>
+  </div>
+
+  <!-- ── DISPOSITIVO NO SOPORTADO ─────────────────────────────────────────── -->
+  <div id="screen-not-supported" class="screen">
+    <div class="screen-inner screen-inner--centered">
+      <div class="icon-circle icon-circle--warning">⚠️</div>
+      <h2>Dispositivo No Compatible</h2>
+      <p>Tu dispositivo o navegador no soporta autenticación biométrica.</p>
+      <ul class="support-list">
+        <li>✅ iPhone / iPad — Face ID o Touch ID (Safari)</li>
+        <li>✅ Android — Huella dactilar (Chrome)</li>
+        <li>✅ Mac — Touch ID (Safari o Chrome)</li>
+        <li>✅ Windows 10/11 — Windows Hello (Edge o Chrome)</li>
+      </ul>
+      <a href="https://kmultimedios.com" class="btn btn--ghost btn--full">Ir al sitio web</a>
+    </div>
+  </div>
+
+  <!-- ── CUOTA ANUAL AGOTADA ──────────────────────────────────────────────── -->
+  <div id="screen-slot-blocked" class="screen">
+    <div class="screen-inner screen-inner--centered">
+      <div class="icon-circle icon-circle--error">🔒</div>
+      <h2>Límite Anual Alcanzado</h2>
+      <p id="blocked-message">Has usado los 2 reemplazos permitidos este año para este tipo de dispositivo.</p>
+      <div class="blocked-notice">
+        <span class="blocked-notice__icon">📅</span>
+        <span>Podrás registrar un nuevo dispositivo el<br>
+          <strong id="reset-date-label">1 de enero del próximo año</strong>
+        </span>
+      </div>
+      <a href="https://kmultimedios.com/contacto/" class="btn btn--ghost btn--full">Contactar soporte</a>
+    </div>
+  </div>
+
+  <!-- ── REGISTRO DE DISPOSITIVO ──────────────────────────────────────────── -->
+  <div id="screen-register" class="screen">
+    <div class="screen-inner">
+      <header class="screen-header">
+        <img src="/pwa/icons/icon-192.png" alt="KM VIP" class="header-logo">
+        <div>
+          <h1 class="header-title">KMultimedios <span class="badge-vip">VIP</span></h1>
+          <p class="header-user">Hola, <strong class="js-user-name"></strong></p>
+        </div>
+      </header>
+
+      <div class="register-card">
+        <!-- Indicador de ranura -->
+        <div class="slot-indicator" id="slot-indicator">
+          <span id="slot-icon">📱</span>
+          <span id="slot-label">Registrando: Móvil</span>
+        </div>
+
+        <div class="register-card__icon" id="register-icon">📱</div>
+        <h2 class="register-card__title">Registrar Dispositivo</h2>
+        <p class="register-card__desc" id="register-desc">
+          Puedes tener <strong>1 dispositivo móvil</strong> y <strong>1 escritorio/PC</strong>.
+          Confirma tu identidad con biometría para vincularlo.
+        </p>
+
+        <div class="form-group">
+          <label for="device-name-input" class="form-label">Nombre del dispositivo (opcional)</label>
+          <input type="text" id="device-name-input" class="form-input"
+                 placeholder="Ej: Mi iPhone, PC del trabajo…" maxlength="60">
+        </div>
+
+        <div class="biometric-methods">
+          <div class="biometric-item"><span>🍎</span> Face ID / Touch ID</div>
+          <div class="biometric-item"><span>🤖</span> Huella Android</div>
+          <div class="biometric-item"><span>💻</span> Windows Hello</div>
+        </div>
+
+        <button id="register-btn" class="btn btn--primary btn--full btn--biometric">
+          <span class="btn-icon">🔑</span> Registrar este dispositivo
+        </button>
+
+        <p class="register-card__footer">
+          Máx. 2 reemplazos por año · por tipo de dispositivo
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── VERIFICACIÓN FALLIDA ──────────────────────────────────────────────── -->
+  <div id="screen-verify-failed" class="screen">
+    <div class="screen-inner screen-inner--centered">
+      <div class="icon-circle icon-circle--error">❌</div>
+      <h2>Verificación Fallida</h2>
+      <p>No pudimos verificar tu dispositivo. Causas posibles:</p>
+      <ul class="error-list">
+        <li>Cancelaste la autenticación biométrica</li>
+        <li>Este tipo de dispositivo no está registrado</li>
+        <li>El dispositivo fue revocado por soporte</li>
+        <li>Problema de conexión</li>
+      </ul>
+      <button id="verify-retry-btn" class="btn btn--primary btn--full">Intentar de nuevo</button>
+      <a href="https://kmultimedios.com/contacto/" class="btn btn--ghost btn--full">Contactar soporte</a>
+    </div>
+  </div>
+
+  <!-- ── ERROR GENERAL ─────────────────────────────────────────────────────── -->
+  <div id="screen-error" class="screen">
+    <div class="screen-inner screen-inner--centered">
+      <div class="icon-circle icon-circle--error">⚡</div>
+      <h2>Error de Conexión</h2>
+      <p>No podemos conectar con el servidor. Verifica tu internet.</p>
+      <button id="retry-btn" class="btn btn--primary btn--full">Reintentar</button>
+      <a href="https://kmultimedios.com" class="btn btn--ghost btn--full">Ir al sitio web</a>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- ── PANTALLA PRINCIPAL – COMMAND CENTER ───────────────────────────────── -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-main" class="screen screen--cc">
+
+    <!-- Capas de fondo animadas -->
+    <div class="cc-grid-layer" aria-hidden="true"></div>
+    <div class="cc-scanline"    aria-hidden="true"></div>
+
+    <!-- Header del Command Center -->
+    <header class="cc-header">
+      <div class="cc-header__left">
+        <img src="/pwa/icons/icon-192.png" alt="KM" class="cc-header__logo">
+        <div class="cc-header__titles">
+          <span class="cc-header__name">KMultimedios <span class="badge-vip">VIP</span></span>
+          <span class="cc-header__sub js-user-name"></span>
+        </div>
+      </div>
+      <div class="cc-header__right">
+        <span class="cc-live-dot" id="cc-live-indicator">● EN VIVO</span>
+        <div class="user-avatar" style="width:28px;height:28px;font-size:.75rem"></div>
+      </div>
+    </header>
+
+    <!-- Tabs de navegación -->
+    <div class="cc-tabs">
+      <button class="cc-tab cc-tab--active" data-tab="cameras" id="tab-cameras">
+        <span>📹</span> Cámaras
+      </button>
+      <button class="cc-tab" data-tab="radio" id="tab-radio">
+        <span>📻</span> Radio
+      </button>
+    </div>
+
+    <!-- ── Tab Cámaras ───────────────────────────────────────────────────── -->
+    <main class="cc-main" id="panel-cameras">
+
+      <!-- Banner de sesión -->
+      <div class="cc-session-banner" id="cc-session-banner">
+        <span class="cc-session-banner__icon">🔐</span>
+        <span class="cc-session-banner__text">
+          Sesión activa: <strong class="js-user-name"></strong>
+          &nbsp;·&nbsp; <span class="js-user-level"></span>
+          &nbsp;·&nbsp; <span id="cc-clock"></span>
+        </span>
+        <div class="cc-radar" aria-hidden="true">
+          <div class="cc-radar__sweep"></div>
+          <div class="cc-radar__ring cc-radar__ring--1"></div>
+          <div class="cc-radar__ring cc-radar__ring--2"></div>
+        </div>
+      </div>
+
+      <!-- Contenedor de zonas (llenado por cameras.js) -->
+      <div id="cc-zones-wrap">
+        <div class="cc-loading-state">
+          <div class="loading-spinner"></div>
+          <p>Conectando con Command Center…</p>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- ── Tab Radio ─────────────────────────────────────────────────────── -->
+    <aside class="cc-main cc-main--hidden" id="panel-radio">
+      <div class="radio-panel">
+
+        <div class="radio-header">
+          <div class="radio-pulse" aria-hidden="true"></div>
+          <div>
+            <h2 class="radio-title">KMultiradio</h2>
+            <p class="radio-subtitle">Señal en vivo · 24/7</p>
+          </div>
+        </div>
+
+        <div class="radio-player-wrap" id="radio-player-wrap">
+          <div class="radio-visualizer" id="radio-visualizer" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+
+          <div class="radio-info" id="radio-info">
+            <p class="radio-info__station">KMultiradio 800</p>
+            <p class="radio-info__status" id="radio-status">Listo para reproducir</p>
+          </div>
+
+          <button class="radio-play-btn" id="radio-play-btn" aria-label="Reproducir / Pausar radio">
+            <span id="radio-play-icon">▶</span>
+          </button>
+
+          <div class="radio-volume-wrap">
+            <span class="radio-vol-icon">🔈</span>
+            <input type="range" id="radio-volume" class="radio-volume" min="0" max="1" step="0.05" value="0.8">
+            <span class="radio-vol-icon">🔊</span>
+          </div>
+        </div>
+
+        <div class="radio-stations">
+          <p class="radio-stations__label">ESTACIONES DISPONIBLES</p>
+          <button class="radio-station radio-station--active" data-url="https://streamers.kmultiradio.com/8002/stream">
+            <span class="radio-station__dot">●</span>
+            <span class="radio-station__name">KMultiradio 800 AM</span>
+            <span class="radio-station__freq">8002</span>
+          </button>
+        </div>
+
+        <p class="radio-legal">Transmisión exclusiva para suscriptores VIP · KMultimedios</p>
+      </div>
+    </aside>
+
+    <!-- Barra inferior -->
+    <nav class="bottom-nav">
+      <button class="bottom-nav__item bottom-nav__item--active" id="nav-home">
+        <span class="bottom-nav__icon">📹</span>
+        <span class="bottom-nav__label">Cámaras</span>
+      </button>
+      <button class="bottom-nav__item" id="nav-devices">
+        <span class="bottom-nav__icon">📲</span>
+        <span class="bottom-nav__label">Dispositivos</span>
+      </button>
+      <a class="bottom-nav__item" href="https://kmultimedios.com" target="_blank">
+        <span class="bottom-nav__icon">🌐</span>
+        <span class="bottom-nav__label">Sitio web</span>
+      </a>
+      <a class="bottom-nav__item" href="https://kmultimedios.com/contacto/" target="_blank">
+        <span class="bottom-nav__icon">💬</span>
+        <span class="bottom-nav__label">Soporte</span>
+      </a>
+    </nav>
+  </div>
+
+  <!-- ── DETALLE DE CONTENIDO ──────────────────────────────────────────────── -->
+  <div id="screen-content-detail" class="screen">
+    <div id="content-detail" class="detail-view"></div>
+    <nav class="bottom-nav">
+      <button class="bottom-nav__item" onclick="App.showScreen('main')">
+        <span class="bottom-nav__icon">←</span>
+        <span class="bottom-nav__label">Volver</span>
+      </button>
+      <button class="bottom-nav__item" id="nav-devices-2">
+        <span class="bottom-nav__icon">📲</span>
+        <span class="bottom-nav__label">Dispositivos</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- ── PANEL MIS DISPOSITIVOS ───────────────────────────────────────────── -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-devices" class="screen">
+    <header class="app-header">
+      <div class="app-header__inner">
+        <button class="btn btn--ghost btn--sm" id="devices-back-btn">← Volver</button>
+        <h2 class="panel-title">Mis Dispositivos</h2>
+        <div style="width:64px"></div><!-- espaciador -->
+      </div>
+    </header>
+
+    <main class="app-main" id="devices-panel-content">
+      <div class="loading-spinner" style="margin:40px auto"></div>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="bottom-nav__item" id="devices-nav-home">
+        <span class="bottom-nav__icon">🏠</span>
+        <span class="bottom-nav__label">Inicio</span>
+      </button>
+      <button class="bottom-nav__item bottom-nav__item--active">
+        <span class="bottom-nav__icon">📲</span>
+        <span class="bottom-nav__label">Dispositivos</span>
+      </button>
+      <a class="bottom-nav__item" href="https://kmultimedios.com/contacto/" target="_blank">
+        <span class="bottom-nav__icon">💬</span>
+        <span class="bottom-nav__label">Soporte</span>
+      </a>
+    </nav>
+  </div>
+
+</div><!-- /#app -->
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
+<script src="/pwa/js/webauthn.js"></script>
+<script src="/pwa/js/auth.js"></script>
+<script src="/pwa/js/cameras.js"></script>
+<script src="/pwa/js/app.js"></script>
+</body>
+</html>

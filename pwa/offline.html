@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>Sin conexión – KMultimedios VIP</title>
+  <link rel="stylesheet" href="/pwa/css/app.css">
+  <style>
+    body { display:flex; align-items:center; justify-content:center; min-height:100dvh; }
+    .offline { text-align:center; padding:32px 24px; max-width:360px; }
+    .offline__icon { font-size:4rem; margin-bottom:16px; }
+    .offline__title { font-size:1.4rem; font-weight:700; margin-bottom:10px; }
+    .offline__text  { color:var(--km-text-muted); line-height:1.6; margin-bottom:24px; }
+  </style>
+</head>
+<body>
+  <div class="offline">
+    <div class="offline__icon">📡</div>
+    <h1 class="offline__title">Sin Conexión</h1>
+    <p class="offline__text">
+      No hay conexión a internet. El contenido que hayas visitado antes sigue disponible.
+      Conéctate y vuelve a intentarlo.
+    </p>
+    <button class="btn btn--primary" onclick="window.location.reload()">Reintentar</button>
+    <button class="btn btn--ghost" onclick="history.back()" style="margin-top:10px">Volver</button>
+  </div>
+</body>
+</html>

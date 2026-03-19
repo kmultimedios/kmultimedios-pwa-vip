@@ -1,0 +1,20 @@
+# Archivos comprimidos temporales
+*.zip
+*.tar.gz
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node (por si acaso)
+node_modules/
+
+# Logs
+*.log
