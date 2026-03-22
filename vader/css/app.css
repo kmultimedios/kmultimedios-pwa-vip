@@ -145,7 +145,7 @@ img { max-width: 100%; display: block; }
 /* ── Toast ───────────────────────────────────────────────────── */
 .toast {
   position: fixed;
-  bottom: calc(var(--nav-h) + 16px + var(--safe-bottom));
+  bottom: 16px;
   left: 50%;
   transform: translateX(-50%) translateY(20px);
   background: var(--km-dark3);
@@ -483,7 +483,7 @@ img { max-width: 100%; display: block; }
 .app-main {
   flex: 1;
   padding: 16px;
-  padding-bottom: calc(var(--nav-h) + 16px + var(--safe-bottom));
+  padding-bottom: 16px;
   overflow-y: auto;
 }
 
@@ -643,44 +643,46 @@ img { max-width: 100%; display: block; }
   margin: 1em 0;
 }
 
-/* ── Bottom navigation ───────────────────────────────────────── */
-.bottom-nav {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  z-index: 200;
+/* ── Top navigation ──────────────────────────────────────────── */
+.top-nav {
   display: flex;
-  background: var(--km-dark2);
-  border-top: 1px solid var(--km-gray);
-  padding-bottom: var(--safe-bottom);
-  height: calc(var(--nav-h) + var(--safe-bottom));
+  background: rgba(0,0,0,0.55);
+  border-bottom: 1px solid rgba(0,255,65,0.12);
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+  z-index: 200;
 }
+.top-nav::-webkit-scrollbar { display: none; }
 
-.bottom-nav__item {
+.top-nav__item {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  padding: 8px 4px;
+  gap: 2px;
+  padding: 6px 4px;
   background: none;
   border: none;
+  border-bottom: 2px solid transparent;
   cursor: pointer;
   color: var(--km-text-muted);
   text-decoration: none;
-  transition: color .15s;
+  transition: color .15s, border-color .15s;
   font-size: inherit;
+  min-width: 56px;
 }
-.bottom-nav__item:hover,
-.bottom-nav__item--active { color: var(--km-red); }
+.top-nav__item:hover,
+.top-nav__item--active { color: var(--km-red); border-bottom-color: var(--km-red); }
 
-.bottom-nav__icon  { font-size: 1.1rem; line-height: 1; }
-.bottom-nav__label { font-size: .58rem; font-weight: 600; letter-spacing: .02em; }
+.top-nav__icon  { font-size: 1rem; line-height: 1; }
+.top-nav__label { font-size: .58rem; font-weight: 600; letter-spacing: .02em; }
 
 /* ── Responsive ──────────────────────────────────────────────── */
 @media (min-width: 600px) {
   .screen-inner { padding: 40px 32px; }
-  .app-main { padding: 24px; padding-bottom: calc(var(--nav-h) + 24px + var(--safe-bottom)); }
+  .app-main { padding: 24px; }
   .content-grid { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
 }
 

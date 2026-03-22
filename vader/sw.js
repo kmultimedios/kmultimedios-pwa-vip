@@ -6,7 +6,7 @@
  *   - Imágenes             → Stale While Revalidate
  */
 
-const CACHE_VERSION  = 'km-vip-v1.0.3';
+const CACHE_VERSION  = 'km-vip-v1.0.4';
 const CACHE_SHELL    = `${CACHE_VERSION}-shell`;
 const CACHE_CONTENT  = `${CACHE_VERSION}-content`;
 const CACHE_IMAGES   = `${CACHE_VERSION}-images`;
