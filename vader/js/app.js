@@ -71,13 +71,24 @@ const CameraView = {
 // ── Video View ────────────────────────────────────────────────────────────────
 const VideoView = {
   loaded: false,
+  hls: null,
   load() {
     if (this.loaded) return;
     this.loaded = true;
-    // Cargar iframe de Nvisor solo cuando el usuario entra por primera vez
-    const iframe = document.getElementById('nvisor-iframe');
-    if (iframe && iframe.src === 'about:blank') {
-      iframe.src = iframe.dataset.src || '';
+    const video = document.getElementById('nvisor-video');
+    if (!video) return;
+    const src = video.dataset.src;
+    if (!src) return;
+
+    if (Hls.isSupported()) {
+      this.hls = new Hls();
+      this.hls.loadSource(src);
+      this.hls.attachMedia(video);
+      this.hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Safari nativo
+      video.src = src;
+      video.play().catch(() => {});
     }
   },
 };

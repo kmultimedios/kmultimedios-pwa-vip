@@ -32,7 +32,7 @@
   --shadow-card:0 2px 12px rgba(0,0,0,0.3);
 
   --header-h:   64px;
-  --nav-h:      64px;
+  --nav-h:      52px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
@@ -674,8 +674,8 @@ img { max-width: 100%; display: block; }
 .bottom-nav__item:hover,
 .bottom-nav__item--active { color: var(--km-red); }
 
-.bottom-nav__icon  { font-size: 1.3rem; }
-.bottom-nav__label { font-size: .65rem; font-weight: 600; letter-spacing: .02em; }
+.bottom-nav__icon  { font-size: 1.1rem; line-height: 1; }
+.bottom-nav__label { font-size: .58rem; font-weight: 600; letter-spacing: .02em; }
 
 /* ── Responsive ──────────────────────────────────────────────── */
 @media (min-width: 600px) {
