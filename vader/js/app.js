@@ -18,6 +18,10 @@ const App = {
 
   // Navegar entre secciones principales con carga lazy
   goTo(section) {
+    // No navegar si auth no terminó (pantallas de carga/login)
+    const authScreens = ['loading','login-required','not-vip','not-supported','slot-blocked','register','verify-failed','error'];
+    if (authScreens.includes(this.currentScreen)) return;
+
     const screenMap = {
       home:     'home',
       cameras:  'main',
@@ -216,7 +220,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Navegación global por data-section ──────────────────────────────────
   document.body.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-section]');
-    if (btn && auth?.isReady) App.goTo(btn.dataset.section);
+    if (btn) App.goTo(btn.dataset.section);
   });
 
   // ── Botones de autenticación ─────────────────────────────────────────────
