@@ -1307,9 +1307,12 @@ img { max-width: 100%; display: block; }
 .radio-visualizer--active span:nth-child(9)  { animation-delay: .12s; }
 .radio-visualizer--active span:nth-child(10) { animation-delay: .22s; }
 
-.radio-info { text-align: center; }
+.radio-player-top { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+.radio-station-logo { width: 56px; height: 56px; border-radius: 8px; object-fit: contain; background: #fff; padding: 4px; flex-shrink: 0; }
+.radio-info { text-align: left; flex: 1; }
 .radio-info__station { font-family:'Orbitron',sans-serif; font-size:.9rem; color:var(--cc-cyan); }
-.radio-info__status  { font-size:.7rem; color:rgba(0,255,65,.6); margin-top:3px; }
+.radio-info__nowplaying { font-size:.7rem; color:rgba(0,255,65,.8); margin-top:2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+.radio-info__status  { font-size:.65rem; color:rgba(0,255,65,.5); margin-top:2px; }
 
 .radio-play-btn {
   width: 64px; height: 64px; border-radius: 50%;
@@ -1336,21 +1339,24 @@ img { max-width: 100%; display: block; }
   letter-spacing: .1em; text-transform: uppercase; margin-bottom: 4px;
 }
 .radio-station {
-  display: flex; align-items: center; gap: 8px;
-  padding: 10px 14px; border-radius: 6px; cursor: pointer;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 8px; cursor: pointer;
   background: rgba(0,0,0,.4); border: 1px solid var(--cc-border);
   color: rgba(0,255,65,.7); font-size: .8rem;
   font-family: 'Share Tech Mono', monospace;
   transition: background .15s, border-color .15s;
   width: 100%; text-align: left;
 }
+.radio-station:hover { background: rgba(0,255,65,.06); border-color: rgba(0,255,65,.4); }
 .radio-station--active {
   border-color: var(--cc-green); color: var(--cc-green);
   background: rgba(0,255,65,.08);
 }
-.radio-station__dot { color: var(--cc-green); animation: cc-pulse-dot 1.2s ease-in-out infinite; }
-.radio-station__name { flex: 1; }
-.radio-station__freq { font-size: .65rem; color: var(--cc-cyan); }
+.radio-station__logo { width: 42px; height: 42px; border-radius: 6px; object-fit: contain; background: #fff; padding: 3px; flex-shrink: 0; }
+.radio-station__info { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.radio-station__name { font-size: .78rem; font-weight: 600; }
+.radio-station__freq { font-size: .62rem; color: var(--cc-cyan); }
+.radio-station__dot { color: var(--cc-green); animation: cc-pulse-dot 1.2s ease-in-out infinite; flex-shrink: 0; }
 
 .radio-legal {
   font-size: .6rem; color: rgba(0,255,65,.35);

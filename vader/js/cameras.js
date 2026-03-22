@@ -352,9 +352,11 @@ const CommandCenter = {
 
 // ── Radio Player ──────────────────────────────────────────────────────────────
 const RadioPlayer = {
-  audio:   null,
-  playing: false,
+  audio:      null,
+  playing:    false,
   currentUrl: 'https://streamers.kmultiradio.com/8002/stream',
+  currentMeta: 'https://streamers.kmultiradio.com/cp/get_info.php?p=8002',
+  _metaTimer: null,
 
   init() {
     document.getElementById('radio-play-btn')?.addEventListener('click', () => this.toggle());
@@ -364,6 +366,7 @@ const RadioPlayer = {
     document.querySelectorAll('.radio-station').forEach(btn => {
       btn.addEventListener('click', () => this._switchStation(btn));
     });
+    this._fetchMeta();
   },
 
   toggle() { this.playing ? this.stop() : this.play(); },
@@ -376,19 +379,47 @@ const RadioPlayer = {
     this.audio.play().then(() => { this.playing = true; this._setUI(true); })
       .catch(err => this._setStatus('Error: ' + err.message));
     this.audio.onerror = () => this._setStatus('⚠ Error de conexión');
+    this._startMetaLoop();
   },
 
   stop() {
     if (this.audio) { this.audio.pause(); this.audio.src = ''; this.audio = null; }
     this.playing = false;
     this._setUI(false);
+    clearInterval(this._metaTimer);
   },
 
   _switchStation(btn) {
     document.querySelectorAll('.radio-station').forEach(b => b.classList.remove('radio-station--active'));
     btn.classList.add('radio-station--active');
-    this.currentUrl = btn.dataset.url;
+    this.currentUrl  = btn.dataset.url;
+    this.currentMeta = btn.dataset.meta || '';
+    // Update player logo + name
+    const logo = document.getElementById('radio-station-logo');
+    const name = document.getElementById('radio-station-name');
+    if (logo) logo.src = btn.dataset.logo || '';
+    if (name) name.textContent = btn.dataset.name || '';
+    document.getElementById('radio-song').textContent = 'En vivo 24/7';
     if (this.playing) this.play(this.currentUrl);
+    else this._fetchMeta();
+  },
+
+  _startMetaLoop() {
+    clearInterval(this._metaTimer);
+    this._fetchMeta();
+    this._metaTimer = setInterval(() => this._fetchMeta(), 10000);
+  },
+
+  async _fetchMeta() {
+    if (!this.currentMeta) return;
+    try {
+      const r = await fetch(this.currentMeta);
+      if (!r.ok) return;
+      const d = await r.json();
+      if (d.title) {
+        document.getElementById('radio-song').textContent = d.title;
+      }
+    } catch { /* silencioso */ }
   },
 
   _setUI(isPlaying) {
