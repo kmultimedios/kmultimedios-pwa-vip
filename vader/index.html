@@ -213,49 +213,110 @@
   </div>
 
   <!-- ══════════════════════════════════════════════════════════════════════ -->
-  <!-- ── PANTALLA PRINCIPAL – COMMAND CENTER ───────────────────────────────── -->
+  <!-- ── PANTALLA INICIO ──────────────────────────────────────────────────── -->
   <!-- ══════════════════════════════════════════════════════════════════════ -->
-  <div id="screen-main" class="screen screen--cc">
-
-    <!-- Capas de fondo animadas -->
+  <div id="screen-home" class="screen screen--cc">
     <div class="cc-grid-layer" aria-hidden="true"></div>
-    <div class="cc-scanline"    aria-hidden="true"></div>
+    <div class="cc-scanline"   aria-hidden="true"></div>
 
-    <!-- Header del Command Center -->
     <header class="cc-header">
       <div class="cc-header__left">
         <img src="/vader/icons/icon-192.png" alt="KM" class="cc-header__logo">
         <div class="cc-header__titles">
           <span class="cc-header__name">KMultimedios <span class="badge-vip">VIP</span></span>
+          <span class="cc-header__sub">Hola, <strong class="js-user-name"></strong></span>
+        </div>
+      </div>
+      <div class="cc-header__right">
+        <span class="js-user-level" style="font-size:.65rem;color:var(--cc-cyan);letter-spacing:.05em"></span>
+        <div class="user-avatar" style="width:32px;height:32px;font-size:.85rem"></div>
+      </div>
+    </header>
+
+    <main class="cc-main home-main">
+      <div class="home-tiles">
+        <button class="home-tile home-tile--cameras" data-section="cameras">
+          <span class="home-tile__icon">📹</span>
+          <div class="home-tile__info">
+            <span class="home-tile__title">Cámaras Fronterizas</span>
+            <span class="home-tile__sub">En Vivo</span>
+          </div>
+          <span class="home-tile__arrow">›</span>
+        </button>
+        <button class="home-tile home-tile--video" data-section="video">
+          <span class="home-tile__icon">📺</span>
+          <div class="home-tile__info">
+            <span class="home-tile__title">Canales de Video</span>
+            <span class="home-tile__sub">Nvisor</span>
+          </div>
+          <span class="home-tile__arrow">›</span>
+        </button>
+        <button class="home-tile home-tile--radio" data-section="radio">
+          <span class="home-tile__icon">📻</span>
+          <div class="home-tile__info">
+            <span class="home-tile__title">Radios</span>
+            <span class="home-tile__sub">3 estaciones en vivo</span>
+          </div>
+          <span class="home-tile__arrow">›</span>
+        </button>
+        <button class="home-tile home-tile--settings" data-section="settings">
+          <span class="home-tile__icon">⚙️</span>
+          <div class="home-tile__info">
+            <span class="home-tile__title">Ajustes</span>
+            <span class="home-tile__sub">Cuenta y dispositivos</span>
+          </div>
+          <span class="home-tile__arrow">›</span>
+        </button>
+      </div>
+    </main>
+
+    <nav class="bottom-nav">
+      <button class="bottom-nav__item bottom-nav__item--active" data-section="cameras">
+        <span class="bottom-nav__icon">📹</span>
+        <span class="bottom-nav__label">Cámaras</span>
+      </button>
+      <button class="bottom-nav__item" data-section="video">
+        <span class="bottom-nav__icon">📺</span>
+        <span class="bottom-nav__label">Video</span>
+      </button>
+      <button class="bottom-nav__item" data-section="radio">
+        <span class="bottom-nav__icon">📻</span>
+        <span class="bottom-nav__label">Radios</span>
+      </button>
+      <button class="bottom-nav__item" data-section="settings">
+        <span class="bottom-nav__icon">⚙️</span>
+        <span class="bottom-nav__label">Ajustes</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- ── CÁMARAS FRONTERIZAS EN VIVO ──────────────────────────────────────── -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-main" class="screen screen--cc">
+    <div class="cc-grid-layer" aria-hidden="true"></div>
+    <div class="cc-scanline"   aria-hidden="true"></div>
+
+    <header class="cc-header">
+      <div class="cc-header__left">
+        <button class="cc-back-btn" data-section="home" aria-label="Inicio">‹</button>
+        <div class="cc-header__titles">
+          <span class="cc-header__name">Cámaras Fronterizas <span class="badge-vip">EN VIVO</span></span>
           <span class="cc-header__sub js-user-name"></span>
         </div>
       </div>
       <div class="cc-header__right">
-        <span class="cc-live-dot" id="cc-live-indicator">● EN VIVO</span>
-        <div class="user-avatar" style="width:28px;height:28px;font-size:.75rem"></div>
+        <span class="cc-live-dot">● LIVE</span>
+        <span id="cc-clock" style="font-size:.7rem;color:rgba(0,255,65,.6);font-family:'Share Tech Mono',monospace"></span>
       </div>
     </header>
 
-    <!-- Tabs de navegación -->
-    <div class="cc-tabs">
-      <button class="cc-tab cc-tab--active" data-tab="cameras" id="tab-cameras">
-        <span>📹</span> Cámaras
-      </button>
-      <button class="cc-tab" data-tab="radio" id="tab-radio">
-        <span>📻</span> Radio
-      </button>
-    </div>
-
-    <!-- ── Tab Cámaras ───────────────────────────────────────────────────── -->
     <main class="cc-main" id="panel-cameras">
-
-      <!-- Banner de sesión -->
       <div class="cc-session-banner" id="cc-session-banner">
         <span class="cc-session-banner__icon">🔐</span>
         <span class="cc-session-banner__text">
-          Sesión activa: <strong class="js-user-name"></strong>
+          <strong class="js-user-name"></strong>
           &nbsp;·&nbsp; <span class="js-user-level"></span>
-          &nbsp;·&nbsp; <span id="cc-clock"></span>
         </span>
         <div class="cc-radar" aria-hidden="true">
           <div class="cc-radar__sweep"></div>
@@ -263,44 +324,130 @@
           <div class="cc-radar__ring cc-radar__ring--2"></div>
         </div>
       </div>
-
-      <!-- Contenedor de zonas (llenado por cameras.js) -->
       <div id="cc-zones-wrap">
         <div class="cc-loading-state">
           <div class="loading-spinner"></div>
           <p>Conectando con Command Center…</p>
         </div>
       </div>
-
     </main>
 
-    <!-- ── Tab Radio ─────────────────────────────────────────────────────── -->
-    <aside class="cc-main cc-main--hidden" id="panel-radio">
-      <div class="radio-panel">
+    <nav class="bottom-nav">
+      <button class="bottom-nav__item bottom-nav__item--active" data-section="cameras">
+        <span class="bottom-nav__icon">📹</span>
+        <span class="bottom-nav__label">Cámaras</span>
+      </button>
+      <button class="bottom-nav__item" data-section="video">
+        <span class="bottom-nav__icon">📺</span>
+        <span class="bottom-nav__label">Video</span>
+      </button>
+      <button class="bottom-nav__item" data-section="radio">
+        <span class="bottom-nav__icon">📻</span>
+        <span class="bottom-nav__label">Radios</span>
+      </button>
+      <button class="bottom-nav__item" data-section="settings">
+        <span class="bottom-nav__icon">⚙️</span>
+        <span class="bottom-nav__label">Ajustes</span>
+      </button>
+    </nav>
+  </div>
 
-        <div class="radio-header">
-          <div class="radio-pulse" aria-hidden="true"></div>
-          <div>
-            <h2 class="radio-title">KMultiradio</h2>
-            <p class="radio-subtitle">Señal en vivo · 24/7</p>
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- ── CANALES DE VIDEO ─────────────────────────────────────────────────── -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-video" class="screen screen--cc">
+    <div class="cc-grid-layer" aria-hidden="true"></div>
+    <div class="cc-scanline"   aria-hidden="true"></div>
+
+    <header class="cc-header">
+      <div class="cc-header__left">
+        <button class="cc-back-btn" data-section="home" aria-label="Inicio">‹</button>
+        <div class="cc-header__titles">
+          <span class="cc-header__name">Canales de Video</span>
+          <span class="cc-header__sub">Nvisor</span>
+        </div>
+      </div>
+      <div class="cc-header__right">
+        <span class="cc-live-dot">● LIVE</span>
+      </div>
+    </header>
+
+    <main class="cc-main video-main" id="panel-video">
+      <div class="video-channels">
+        <div class="video-channel-card video-channel-card--active" id="channel-nvisor">
+          <div class="video-channel__header">
+            <span class="video-channel__dot">●</span>
+            <span class="video-channel__name">Nvisor</span>
+            <span class="video-channel__badge">EN VIVO</span>
+          </div>
+          <div class="video-channel__player" id="nvisor-player">
+            <iframe
+              id="nvisor-iframe"
+              src="about:blank"
+              data-src="https://nvisor.com/embed/kmultimedios"
+              allowfullscreen
+              allow="autoplay; fullscreen"
+              style="width:100%;height:100%;border:none;border-radius:6px">
+            </iframe>
           </div>
         </div>
+      </div>
+    </main>
 
+    <nav class="bottom-nav">
+      <button class="bottom-nav__item" data-section="cameras">
+        <span class="bottom-nav__icon">📹</span>
+        <span class="bottom-nav__label">Cámaras</span>
+      </button>
+      <button class="bottom-nav__item bottom-nav__item--active" data-section="video">
+        <span class="bottom-nav__icon">📺</span>
+        <span class="bottom-nav__label">Video</span>
+      </button>
+      <button class="bottom-nav__item" data-section="radio">
+        <span class="bottom-nav__icon">📻</span>
+        <span class="bottom-nav__label">Radios</span>
+      </button>
+      <button class="bottom-nav__item" data-section="settings">
+        <span class="bottom-nav__icon">⚙️</span>
+        <span class="bottom-nav__label">Ajustes</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- ── RADIOS ────────────────────────────────────────────────────────────── -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-radio" class="screen screen--cc">
+    <div class="cc-grid-layer" aria-hidden="true"></div>
+    <div class="cc-scanline"   aria-hidden="true"></div>
+
+    <header class="cc-header">
+      <div class="cc-header__left">
+        <button class="cc-back-btn" data-section="home" aria-label="Inicio">‹</button>
+        <div class="cc-header__titles">
+          <span class="cc-header__name">Radios</span>
+          <span class="cc-header__sub">KMultimedios · En vivo 24/7</span>
+        </div>
+      </div>
+      <div class="cc-header__right">
+        <div class="radio-pulse" aria-hidden="true"></div>
+      </div>
+    </header>
+
+    <main class="cc-main" id="panel-radio">
+      <div class="radio-panel">
         <div class="radio-player-wrap" id="radio-player-wrap">
           <div class="radio-visualizer" id="radio-visualizer" aria-hidden="true">
             <span></span><span></span><span></span><span></span><span></span>
             <span></span><span></span><span></span><span></span><span></span>
           </div>
-
           <div class="radio-info" id="radio-info">
-            <p class="radio-info__station">KMultiradio 800</p>
+            <p class="radio-info__station" id="radio-station-name">KMultiradio 800 AM</p>
             <p class="radio-info__status" id="radio-status">Listo para reproducir</p>
           </div>
-
-          <button class="radio-play-btn" id="radio-play-btn" aria-label="Reproducir / Pausar radio">
+          <button class="radio-play-btn" id="radio-play-btn" aria-label="Reproducir / Pausar">
             <span id="radio-play-icon">▶</span>
           </button>
-
           <div class="radio-volume-wrap">
             <span class="radio-vol-icon">🔈</span>
             <input type="range" id="radio-volume" class="radio-volume" min="0" max="1" step="0.05" value="0.8">
@@ -310,49 +457,89 @@
 
         <div class="radio-stations">
           <p class="radio-stations__label">ESTACIONES DISPONIBLES</p>
-          <button class="radio-station radio-station--active" data-url="https://streamers.kmultiradio.com/8002/stream">
+          <button class="radio-station radio-station--active"
+                  data-url="https://streamers.kmultiradio.com/8002/stream"
+                  data-name="KMultiradio 800 AM">
             <span class="radio-station__dot">●</span>
             <span class="radio-station__name">KMultiradio 800 AM</span>
-            <span class="radio-station__freq">8002</span>
+            <span class="radio-station__freq">800 AM</span>
+          </button>
+          <button class="radio-station"
+                  data-url=""
+                  data-name="Estación 2">
+            <span class="radio-station__dot" style="opacity:.4">●</span>
+            <span class="radio-station__name">Estación 2</span>
+            <span class="radio-station__freq" style="color:rgba(0,255,65,.4)">Próximamente</span>
+          </button>
+          <button class="radio-station"
+                  data-url=""
+                  data-name="Estación 3">
+            <span class="radio-station__dot" style="opacity:.4">●</span>
+            <span class="radio-station__name">Estación 3</span>
+            <span class="radio-station__freq" style="color:rgba(0,255,65,.4)">Próximamente</span>
           </button>
         </div>
-
         <p class="radio-legal">Transmisión exclusiva para suscriptores VIP · KMultimedios</p>
       </div>
-    </aside>
+    </main>
 
-    <!-- Barra inferior -->
     <nav class="bottom-nav">
-      <button class="bottom-nav__item bottom-nav__item--active" id="nav-home">
+      <button class="bottom-nav__item" data-section="cameras">
         <span class="bottom-nav__icon">📹</span>
         <span class="bottom-nav__label">Cámaras</span>
       </button>
-      <button class="bottom-nav__item" id="nav-devices">
-        <span class="bottom-nav__icon">📲</span>
-        <span class="bottom-nav__label">Dispositivos</span>
+      <button class="bottom-nav__item" data-section="video">
+        <span class="bottom-nav__icon">📺</span>
+        <span class="bottom-nav__label">Video</span>
       </button>
-      <a class="bottom-nav__item" href="https://kmultimedios.com" target="_blank">
-        <span class="bottom-nav__icon">🌐</span>
-        <span class="bottom-nav__label">Sitio web</span>
-      </a>
-      <a class="bottom-nav__item" href="https://kmultimedios.com/contacto/" target="_blank">
-        <span class="bottom-nav__icon">💬</span>
-        <span class="bottom-nav__label">Soporte</span>
-      </a>
+      <button class="bottom-nav__item bottom-nav__item--active" data-section="radio">
+        <span class="bottom-nav__icon">📻</span>
+        <span class="bottom-nav__label">Radios</span>
+      </button>
+      <button class="bottom-nav__item" data-section="settings">
+        <span class="bottom-nav__icon">⚙️</span>
+        <span class="bottom-nav__label">Ajustes</span>
+      </button>
     </nav>
   </div>
 
-  <!-- ── DETALLE DE CONTENIDO ──────────────────────────────────────────────── -->
-  <div id="screen-content-detail" class="screen">
-    <div id="content-detail" class="detail-view"></div>
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <!-- ── AJUSTES ───────────────────────────────────────────────────────────── -->
+  <!-- ══════════════════════════════════════════════════════════════════════ -->
+  <div id="screen-settings" class="screen screen--cc">
+    <div class="cc-grid-layer" aria-hidden="true"></div>
+    <div class="cc-scanline"   aria-hidden="true"></div>
+
+    <header class="cc-header">
+      <div class="cc-header__left">
+        <button class="cc-back-btn" data-section="home" aria-label="Inicio">‹</button>
+        <div class="cc-header__titles">
+          <span class="cc-header__name">Ajustes</span>
+          <span class="cc-header__sub">Cuenta y dispositivos</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="cc-main settings-main" id="panel-settings">
+      <!-- Renderizado por JS -->
+    </main>
+
     <nav class="bottom-nav">
-      <button class="bottom-nav__item" onclick="App.showScreen('main')">
-        <span class="bottom-nav__icon">←</span>
-        <span class="bottom-nav__label">Volver</span>
+      <button class="bottom-nav__item" data-section="cameras">
+        <span class="bottom-nav__icon">📹</span>
+        <span class="bottom-nav__label">Cámaras</span>
       </button>
-      <button class="bottom-nav__item" id="nav-devices-2">
-        <span class="bottom-nav__icon">📲</span>
-        <span class="bottom-nav__label">Dispositivos</span>
+      <button class="bottom-nav__item" data-section="video">
+        <span class="bottom-nav__icon">📺</span>
+        <span class="bottom-nav__label">Video</span>
+      </button>
+      <button class="bottom-nav__item" data-section="radio">
+        <span class="bottom-nav__icon">📻</span>
+        <span class="bottom-nav__label">Radios</span>
+      </button>
+      <button class="bottom-nav__item bottom-nav__item--active" data-section="settings">
+        <span class="bottom-nav__icon">⚙️</span>
+        <span class="bottom-nav__label">Ajustes</span>
       </button>
     </nav>
   </div>
@@ -360,12 +547,16 @@
   <!-- ══════════════════════════════════════════════════════════════════════ -->
   <!-- ── PANEL MIS DISPOSITIVOS ───────────────────────────────────────────── -->
   <!-- ══════════════════════════════════════════════════════════════════════ -->
-  <div id="screen-devices" class="screen">
-    <header class="app-header">
-      <div class="app-header__inner">
-        <button class="btn btn--ghost btn--sm" id="devices-back-btn">← Volver</button>
-        <h2 class="panel-title">Mis Dispositivos</h2>
-        <div style="width:64px"></div><!-- espaciador -->
+  <div id="screen-devices" class="screen screen--cc">
+    <div class="cc-grid-layer" aria-hidden="true"></div>
+
+    <header class="cc-header">
+      <div class="cc-header__left">
+        <button class="cc-back-btn" data-section="settings" aria-label="Ajustes">‹</button>
+        <div class="cc-header__titles">
+          <span class="cc-header__name">Mis Dispositivos</span>
+          <span class="cc-header__sub">Gestión de acceso biométrico</span>
+        </div>
       </div>
     </header>
 
@@ -374,18 +565,22 @@
     </main>
 
     <nav class="bottom-nav">
-      <button class="bottom-nav__item" id="devices-nav-home">
-        <span class="bottom-nav__icon">🏠</span>
-        <span class="bottom-nav__label">Inicio</span>
+      <button class="bottom-nav__item" data-section="cameras">
+        <span class="bottom-nav__icon">📹</span>
+        <span class="bottom-nav__label">Cámaras</span>
       </button>
-      <button class="bottom-nav__item bottom-nav__item--active">
-        <span class="bottom-nav__icon">📲</span>
-        <span class="bottom-nav__label">Dispositivos</span>
+      <button class="bottom-nav__item" data-section="video">
+        <span class="bottom-nav__icon">📺</span>
+        <span class="bottom-nav__label">Video</span>
       </button>
-      <a class="bottom-nav__item" href="https://kmultimedios.com/contacto/" target="_blank">
-        <span class="bottom-nav__icon">💬</span>
-        <span class="bottom-nav__label">Soporte</span>
-      </a>
+      <button class="bottom-nav__item" data-section="radio">
+        <span class="bottom-nav__icon">📻</span>
+        <span class="bottom-nav__label">Radios</span>
+      </button>
+      <button class="bottom-nav__item bottom-nav__item--active" data-section="settings">
+        <span class="bottom-nav__icon">⚙️</span>
+        <span class="bottom-nav__label">Ajustes</span>
+      </button>
     </nav>
   </div>
 

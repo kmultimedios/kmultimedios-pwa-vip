@@ -135,11 +135,8 @@ class AuthManager {
       this.user.level_name   = result.level_name;
       this.updateUserUI();
       App.showMessage('', '');
-      App.showScreen('main');
       this.isReady = true;
-
-      // Cargar iframe de cámaras (solo después de autenticar)
-      CameraView.load();
+      App.goTo('home');
 
     } catch (err) {
       // Si el error es que no existe dispositivo en esta ranura, ir a registro

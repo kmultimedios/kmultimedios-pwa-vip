@@ -14,12 +14,25 @@ const App = {
     });
     this.currentScreen = id;
     window.scrollTo(0, 0);
+  },
 
-    // Actualizar nav activo en pantalla principal
-    if (id === 'main') {
-      document.querySelectorAll('.bottom-nav__item').forEach(el => el.classList.remove('bottom-nav__item--active'));
-      document.getElementById('nav-home')?.classList.add('bottom-nav__item--active');
-    }
+  // Navegar entre secciones principales con carga lazy
+  goTo(section) {
+    const screenMap = {
+      home:     'home',
+      cameras:  'main',
+      video:    'video',
+      radio:    'radio',
+      settings: 'settings',
+      devices:  'devices',
+    };
+    this.showScreen(screenMap[section] || section);
+
+    if (section === 'cameras')  CameraView.load();
+    if (section === 'video')    VideoView.load();
+    if (section === 'radio')    RadioView.load();
+    if (section === 'settings') SettingsView.render();
+    if (section === 'devices')  auth.initDevicesPanel();
   },
 
   showMessage(text, type = 'info') {
@@ -48,98 +61,102 @@ const App = {
 // ── Camera View ───────────────────────────────────────────────────────────────
 const CameraView = {
   loaded: false,
-
   load() {
     if (this.loaded) return;
     this.loaded = true;
-    // Inicializar el Command Center nativo
-    initTabs();
-    RadioPlayer.init();
     CommandCenter.load();
   },
 };
 
-// ── Content Manager (mantenido para compatibilidad) ───────────────────────────
-const ContentManager = {
-  async load() {
-    const grid = document.getElementById('content-grid');
-    if (!grid) return;
-
-    grid.innerHTML = '<div class="content-skeleton"></div>'.repeat(4);
-
-    try {
-      const data  = await wa._fetch('/content');
-      const items = data.items || [];
-
-      if (!items.length) {
-        grid.innerHTML = '<p class="content-empty">No hay contenido disponible aún.</p>';
-        return;
-      }
-
-      grid.innerHTML = '';
-      items.forEach(item => grid.appendChild(this._card(item)));
-
-    } catch (err) {
-      grid.innerHTML = `<p class="content-empty content-empty--error">Error cargando contenido: ${err.message}</p>`;
+// ── Video View ────────────────────────────────────────────────────────────────
+const VideoView = {
+  loaded: false,
+  load() {
+    if (this.loaded) return;
+    this.loaded = true;
+    // Cargar iframe de Nvisor solo cuando el usuario entra por primera vez
+    const iframe = document.getElementById('nvisor-iframe');
+    if (iframe && iframe.src === 'about:blank') {
+      iframe.src = iframe.dataset.src || '';
     }
   },
+};
 
-  _card(item) {
-    const card  = document.createElement('article');
-    card.className  = 'content-card';
-    card.dataset.id = item.id;
-
-    const thumb = item.thumbnail
-      ? `<img src="${item.thumbnail}" alt="${item.title}" loading="lazy" class="content-card__img">`
-      : '<div class="content-card__img content-card__img--placeholder"></div>';
-
-    const date = item.date
-      ? new Date(item.date).toLocaleDateString('es-MX', { day:'numeric', month:'short', year:'numeric' })
-      : '';
-
-    card.innerHTML = `
-      ${thumb}
-      <div class="content-card__body">
-        <span class="content-card__type">${item.type === 'post' ? 'Artículo' : 'Página'}</span>
-        <h3 class="content-card__title">${item.title}</h3>
-        <p class="content-card__excerpt">${item.excerpt || ''}</p>
-        <span class="content-card__date">${date}</span>
-      </div>`;
-
-    card.addEventListener('click', () => this._openItem(item.id));
-    return card;
+// ── Radio View ────────────────────────────────────────────────────────────────
+const RadioView = {
+  loaded: false,
+  load() {
+    if (this.loaded) return;
+    this.loaded = true;
+    RadioPlayer.init();
   },
+};
 
-  async _openItem(id) {
-    const detail = document.getElementById('content-detail');
-    if (!detail) return;
+// ── Settings View ─────────────────────────────────────────────────────────────
+const SettingsView = {
+  render() {
+    const container = document.getElementById('panel-settings');
+    if (!container) return;
+    const user = auth?.user;
+    const initial = (user?.display_name || '?')[0].toUpperCase();
 
-    App.showScreen('content-detail');
-    detail.innerHTML = '<div class="loading-spinner" style="margin:60px auto"></div>';
+    container.innerHTML = `
+      <div class="settings-card settings-user-card">
+        <div class="settings-avatar">${initial}</div>
+        <div class="settings-user-info">
+          <span class="settings-user-name">${user?.display_name || ''}</span>
+          <span class="settings-user-email">${user?.email || ''}</span>
+          <span class="settings-user-level">${user?.level_name || 'VIP'}</span>
+        </div>
+      </div>
 
-    try {
-      const item = await wa._fetch(`/content/${id}`);
-      const date = item.date
-        ? new Date(item.date).toLocaleDateString('es-MX', { day:'numeric', month:'long', year:'numeric' })
-        : '';
-
-      detail.innerHTML = `
-        ${item.thumbnail ? `<img src="${item.thumbnail}" alt="${item.title}" class="detail__hero">` : ''}
-        <div class="detail__content">
-          <h1 class="detail__title">${item.title}</h1>
-          <div class="detail__meta">
-            ${item.author ? `<span>${item.author}</span>` : ''}
-            ${date ? `<span>${date}</span>` : ''}
+      <div class="settings-section">
+        <p class="settings-section__label">DISPOSITIVOS</p>
+        <button class="settings-item" onclick="App.goTo('devices')">
+          <span class="settings-item__icon">📲</span>
+          <div class="settings-item__info">
+            <span class="settings-item__title">Mis Dispositivos</span>
+            <span class="settings-item__sub">Ver y gestionar tus dispositivos registrados</span>
           </div>
-          <div class="detail__body">${item.content || ''}</div>
-        </div>`;
+          <span class="settings-item__arrow">›</span>
+        </button>
+      </div>
 
-    } catch (err) {
-      detail.innerHTML = `<div class="screen-inner screen-inner--centered">
-        <p class="error-msg">Error: ${err.message}</p>
-        <button class="btn btn--ghost" onclick="App.showScreen('main')">← Volver</button>
-      </div>`;
-    }
+      <div class="settings-section">
+        <p class="settings-section__label">AYUDA</p>
+        <a class="settings-item" href="https://kmultimedios.com/contacto/" target="_blank">
+          <span class="settings-item__icon">💬</span>
+          <div class="settings-item__info">
+            <span class="settings-item__title">Soporte</span>
+            <span class="settings-item__sub">Contactar al equipo de KMultimedios</span>
+          </div>
+          <span class="settings-item__arrow">›</span>
+        </a>
+        <a class="settings-item" href="https://kmultimedios.com" target="_blank">
+          <span class="settings-item__icon">🌐</span>
+          <div class="settings-item__info">
+            <span class="settings-item__title">Sitio Web</span>
+            <span class="settings-item__sub">kmultimedios.com</span>
+          </div>
+          <span class="settings-item__arrow">›</span>
+        </a>
+      </div>
+
+      <div class="settings-section">
+        <p class="settings-section__label">SESIÓN</p>
+        <a class="settings-item settings-item--danger"
+           href="https://kmultimedios.com/wp-login.php?action=logout"
+           onclick="return confirm('¿Cerrar sesión?')">
+          <span class="settings-item__icon">🚪</span>
+          <div class="settings-item__info">
+            <span class="settings-item__title">Cerrar Sesión</span>
+            <span class="settings-item__sub">Salir de tu cuenta VIP</span>
+          </div>
+        </a>
+      </div>
+
+      <p class="settings-version">KMultimedios VIP · v2.1</p>
+    `;
   },
 };
 
@@ -196,38 +213,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   wa   = new WebAuthnManager(API_BASE);
   auth = new AuthManager(wa);
 
+  // ── Navegación global por data-section ──────────────────────────────────
+  document.body.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-section]');
+    if (btn && auth?.isReady) App.goTo(btn.dataset.section);
+  });
+
   // ── Botones de autenticación ─────────────────────────────────────────────
   document.getElementById('register-btn')?.addEventListener('click',    () => auth.doRegister());
   document.getElementById('retry-btn')?.addEventListener('click',        () => auth.init());
   document.getElementById('verify-retry-btn')?.addEventListener('click', () => auth.doVerify());
 
-  // ── Navegación a panel de dispositivos ──────────────────────────────────
-  function goToDevices() {
-    App.showScreen('devices');
-    // Actualizar nav activo
-    document.querySelectorAll('#screen-main .bottom-nav__item').forEach(el => el.classList.remove('bottom-nav__item--active'));
-    document.getElementById('nav-devices')?.classList.add('bottom-nav__item--active');
-    auth.initDevicesPanel();
-  }
-
-  document.getElementById('nav-devices')?.addEventListener('click', goToDevices);
-  document.getElementById('nav-devices-2')?.addEventListener('click', goToDevices);
-
-  // ── Botones nav de pantalla principal ────────────────────────────────────
-  document.getElementById('nav-home')?.addEventListener('click', () => App.showScreen('main'));
-
-  // ── Botones volver desde panel dispositivos ──────────────────────────────
-  document.getElementById('devices-back-btn')?.addEventListener('click',  () => App.showScreen('main'));
-  document.getElementById('devices-nav-home')?.addEventListener('click',  () => App.showScreen('main'));
-
-  // ── Modal de confirmación de eliminar ────────────────────────────────────
+  // ── Modal confirmación eliminar ──────────────────────────────────────────
   document.getElementById('modal-confirm-btn')?.addEventListener('click', () => auth.confirmDelete());
   document.getElementById('modal-cancel-btn')?.addEventListener('click',  () => {
-    const modal = document.getElementById('modal-overlay');
-    if (modal) modal.classList.remove('modal--open');
+    document.getElementById('modal-overlay')?.classList.remove('modal--open');
     auth._pendingDelete = null;
   });
-  // Cerrar modal al hacer clic fuera
   document.getElementById('modal-overlay')?.addEventListener('click', (e) => {
     if (e.target === e.currentTarget) {
       e.currentTarget.classList.remove('modal--open');
@@ -238,7 +240,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Botón instalar ───────────────────────────────────────────────────────
   document.getElementById('install-btn')?.addEventListener('click', async () => {
     if (!deferredInstallPrompt) {
-      App.showToast('Abre el menú del navegador y selecciona "Instalar app" o "Añadir a inicio".', 'info', 5000);
+      App.showToast('Abre el menú del navegador y selecciona "Instalar app".', 'info', 5000);
       return;
     }
     deferredInstallPrompt.prompt();
@@ -247,34 +249,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     deferredInstallPrompt = null;
   });
 
-  // ── Hash navigation ──────────────────────────────────────────────────────
-  window.addEventListener('hashchange', handleHash);
-
-  // ── Iniciar flujo ────────────────────────────────────────────────────────
-  // Botón "Iniciar Sesión": forzar navegación en el mismo contexto
-  // (en modo standalone PWA los <a> externos abren en otra ventana)
+  // ── Botón Iniciar Sesión: forzar navegación en standalone ───────────────
   document.getElementById('screen-login-required')
-    ?.querySelectorAll('a[href*="wp-login"], a[href*="wp-admin"]')
+    ?.querySelectorAll('a[href*="wp-login"]')
     .forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        window.location.href = link.href;
-      });
+      link.addEventListener('click', (e) => { e.preventDefault(); window.location.href = link.href; });
     });
 
   await auth.init();
-  handleHash();
 });
-
-function handleHash() {
-  if (!auth?.isReady) return;
-  if (window.location.hash === '#dispositivos') {
-    App.showScreen('devices');
-    auth.initDevicesPanel();
-  } else if (window.location.hash === '#contenido') {
-    App.showScreen('main');
-  }
-}
 
 // Contenedor de toasts
 document.addEventListener('DOMContentLoaded', () => {
