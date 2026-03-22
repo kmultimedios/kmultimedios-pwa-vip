@@ -158,7 +158,7 @@ class PWA_Admin {
             wp_die('Sin permisos.');
         }
 
-        PWA_Database::revoke_device($user_id);
+        PWA_Database::admin_revoke_all_devices($user_id);
         wp_redirect(admin_url('admin.php?page=pwa-vip-devices&pwa_revoked=1'));
         exit;
     }

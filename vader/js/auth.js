@@ -17,7 +17,22 @@ class AuthManager {
     try {
       App.showScreen('loading');
 
-      // 1. Estado del usuario
+      // 1. Bootstrap via admin-ajax.php (funciona con cookies WP sin nonce previo)
+      //    Solo si aún no tenemos nonce (ej. no vino de login_redirect)
+      if (!this.wa.nonce) {
+        const boot = await this.wa.getBootstrap();
+        if (!boot.is_logged_in) {
+          App.showScreen('login-required');
+          return;
+        }
+        if (!boot.is_vip) {
+          App.showScreen('not-vip');
+          return;
+        }
+        // boot.nonce ya fue guardado en this.wa.nonce por getBootstrap()
+      }
+
+      // 2. Estado completo con info de dispositivos (ya tenemos nonce)
       const status = await this.wa.checkVipStatus();
 
       if (!status.is_logged_in) {

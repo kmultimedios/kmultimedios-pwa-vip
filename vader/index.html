@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -13,19 +14,35 @@
 
   <title>KMultimedios VIP</title>
 
-  <link rel="manifest" href="/pwa/manifest.json">
-  <link rel="icon"             href="/pwa/icons/icon-192.png">
-  <link rel="apple-touch-icon" href="/pwa/icons/icon-192.png">
-  <link rel="apple-touch-icon" sizes="152x152" href="/pwa/icons/icon-152.png">
-  <link rel="stylesheet" href="/pwa/css/app.css">
+  <link rel="manifest" href="/vader/manifest.json">
+  <link rel="icon"             href="/vader/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/vader/icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/vader/icons/icon-152.png">
+  <link rel="stylesheet" href="/vader/css/app.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous">
 </head>
 <body>
 
-<!-- ── Banner de instalación ─────────────────────────────────────────────── -->
+<!-- ── Banner de instalación (Android/Desktop) ───────────────────────────── -->
 <div id="install-banner" class="install-banner" hidden>
   <span>Instala la app para acceso rápido</span>
   <button id="install-btn" class="btn btn--sm btn--accent">Instalar</button>
+</div>
+
+<!-- ── Banner de instalación iOS ─────────────────────────────────────────── -->
+<div id="ios-install-banner" class="ios-install-banner" hidden>
+  <button id="ios-install-close" class="ios-install-close" aria-label="Cerrar">✕</button>
+  <div class="ios-install-content">
+    <img src="/vader/icons/icon-72.png" alt="KM VIP" class="ios-install-icon">
+    <div class="ios-install-text">
+      <p class="ios-install-title">Instalar KMultimedios VIP</p>
+      <p class="ios-install-desc">
+        Toca <strong>⬆</strong> y luego<br>
+        <strong>"Añadir a pantalla de inicio"</strong>
+      </p>
+    </div>
+  </div>
+  <div class="ios-install-arrow" aria-hidden="true">▼</div>
 </div>
 
 <!-- ── Mensaje global ────────────────────────────────────────────────────── -->
@@ -53,7 +70,7 @@
   <div id="screen-loading" class="screen active">
     <div class="splash">
       <div class="splash__logo">
-        <img src="/pwa/icons/icon-192.png" alt="KMultimedios VIP" class="splash__img">
+        <img src="/vader/icons/icon-192.png" alt="KMultimedios VIP" class="splash__img">
         <span class="splash__k">K</span>
         <span class="splash__brand">MULTIMEDIOS</span>
         <span class="splash__vip">VIP</span>
@@ -69,7 +86,7 @@
       <div class="icon-circle icon-circle--warning">🔐</div>
       <h2>Inicia Sesión</h2>
       <p>Necesitas iniciar sesión en KMultimedios para acceder a tu app VIP.</p>
-      <a href="https://kmultimedios.com/wp-login.php?redirect_to=/pwa/" class="btn btn--primary btn--full">
+      <a href="https://kmultimedios.com/wp-login.php?redirect_to=/vader/" class="btn btn--primary btn--full">
         Iniciar Sesión
       </a>
       <a href="https://kmultimedios.com" class="btn btn--ghost btn--full">Ir al sitio web</a>
@@ -123,7 +140,7 @@
   <div id="screen-register" class="screen">
     <div class="screen-inner">
       <header class="screen-header">
-        <img src="/pwa/icons/icon-192.png" alt="KM VIP" class="header-logo">
+        <img src="/vader/icons/icon-192.png" alt="KM VIP" class="header-logo">
         <div>
           <h1 class="header-title">KMultimedios <span class="badge-vip">VIP</span></h1>
           <p class="header-user">Hola, <strong class="js-user-name"></strong></p>
@@ -207,7 +224,7 @@
     <!-- Header del Command Center -->
     <header class="cc-header">
       <div class="cc-header__left">
-        <img src="/pwa/icons/icon-192.png" alt="KM" class="cc-header__logo">
+        <img src="/vader/icons/icon-192.png" alt="KM" class="cc-header__logo">
         <div class="cc-header__titles">
           <span class="cc-header__name">KMultimedios <span class="badge-vip">VIP</span></span>
           <span class="cc-header__sub js-user-name"></span>
@@ -375,9 +392,9 @@
 </div><!-- /#app -->
 
 <script src="https://cdn.jsdelivr.net/npm/hls.js@1/dist/hls.min.js"></script>
-<script src="/pwa/js/webauthn.js"></script>
-<script src="/pwa/js/auth.js"></script>
-<script src="/pwa/js/cameras.js"></script>
-<script src="/pwa/js/app.js"></script>
+<script src="/vader/js/webauthn.js"></script>
+<script src="/vader/js/auth.js"></script>
+<script src="/vader/js/cameras.js"></script>
+<script src="/vader/js/app.js"></script>
 </body>
 </html>

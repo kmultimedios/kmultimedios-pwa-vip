@@ -45,8 +45,46 @@ function pwa_vip_auth_init(): void {
     // Shortcode [pwa_download_link]
     add_shortcode('pwa_download_link', 'pwa_vip_download_shortcode');
 
-    // Cabeceras CORS para la PWA (solo en rutas /wp-json/pwa/)
+    // Cabeceras CORS para la PWA (solo en rutas /wp-json/vader/)
     add_action('rest_api_init', 'pwa_vip_cors_headers', 15);
+
+    // Inyectar nonce en la URL al redirigir desde login hacia /vader/
+    add_filter('login_redirect', 'pwa_vip_inject_nonce_on_redirect', 10, 3);
+
+    // AJAX bootstrap: permite que la PWA obtenga nonce + estado sin necesitar nonce previo
+    add_action('wp_ajax_pwa_bootstrap',        'pwa_vip_ajax_bootstrap');
+    add_action('wp_ajax_nopriv_pwa_bootstrap', 'pwa_vip_ajax_bootstrap');
+}
+
+function pwa_vip_inject_nonce_on_redirect(string $redirect_to, string $requested, $user): string {
+    if (!is_wp_error($user) && strpos($redirect_to, '/vader/') !== false) {
+        $nonce       = wp_create_nonce('wp_rest');
+        $redirect_to = add_query_arg('_pwa_nonce', $nonce, $redirect_to);
+    }
+    return $redirect_to;
+}
+
+function pwa_vip_ajax_bootstrap(): void {
+    if (!is_user_logged_in()) {
+        wp_send_json([
+            'is_logged_in' => false,
+            'is_vip'       => false,
+            'nonce'        => '',
+        ]);
+    }
+
+    $user_id = get_current_user_id();
+    $is_vip  = PWA_PMP::is_vip($user_id);
+    $user    = wp_get_current_user();
+
+    wp_send_json([
+        'is_logged_in' => true,
+        'is_vip'       => $is_vip,
+        'nonce'        => $is_vip ? wp_create_nonce('wp_rest') : '',
+        'user_id'      => $user_id,
+        'display_name' => $user->display_name,
+        'email'        => $user->user_email,
+    ]);
 }
 
 // ── Shortcode ────────────────────────────────────────────────────────────────
@@ -63,7 +101,7 @@ function pwa_vip_download_shortcode(array $atts = []): string {
         return '<p class="pwa-notice pwa-notice--error">Esta función es exclusiva para miembros VIP.</p>';
     }
 
-    $pwa_url   = home_url('/pwa/');
+    $pwa_url   = home_url('/vader/');
     $has_device = PWA_Database::user_has_device($user_id);
     $label     = esc_html($atts['texto']);
 

@@ -107,6 +107,21 @@ class PWA_API {
     // ── Endpoints ────────────────────────────────────────────────────────────
 
     public static function check_vip(WP_REST_Request $request): WP_REST_Response {
+        // El REST API ignora cookies sin nonce (protección CSRF).
+        // check-vip es el endpoint bootstrap: buscamos la cookie logged_in
+        // para poder devolver el nonce que usarán todas las llamadas posteriores.
+        if (!is_user_logged_in()) {
+            foreach ($_COOKIE as $name => $value) {
+                if (str_starts_with($name, 'wordpress_logged_in_')) {
+                    $uid = wp_validate_auth_cookie($value, 'logged_in');
+                    if ($uid) {
+                        wp_set_current_user($uid);
+                        break;
+                    }
+                }
+            }
+        }
+
         if (!is_user_logged_in()) {
             return self::response([
                 'is_logged_in'        => false,
@@ -151,6 +166,13 @@ class PWA_API {
         $is_blocked  = !$has_slot && PWA_Database::user_is_blocked_for_slot($user_id, $device_type);
         $challenge   = PWA_WebAuthn::generate_challenge($user_id);
 
+        // Si el usuario ya tiene dispositivo, devolver credential_id para allowCredentials
+        $credential_id = null;
+        if ($has_slot) {
+            $device = PWA_Database::get_device_by_user_and_type($user_id, $device_type);
+            $credential_id = $device ? $device->credential_id : null;
+        }
+
         return self::response([
             'challenge'     => $challenge,
             'rp_id'         => PWA_WebAuthn::RP_ID,
@@ -158,6 +180,7 @@ class PWA_API {
             'device_type'   => $device_type,
             'slot_available'=> !$has_slot,
             'is_blocked'    => $is_blocked,
+            'credential_id' => $credential_id,
         ]);
     }
 
@@ -241,9 +264,6 @@ class PWA_API {
 
         // Establecer sesión WordPress (siempre, para renovar cookie y nonce)
         wp_set_current_user($user_id);
-        wp_set_auth_cookie($user_id, true, true); // remember=true, secure=true
-        // Forzar inicialización de sesión en el contexto REST
-        wp_set_logged_in_cookie($user_id);
 
         self::log_event('device_verified', $user_id, ['device_type' => $device_type]);
 

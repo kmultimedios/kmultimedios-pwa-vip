@@ -160,6 +160,27 @@ window.addEventListener('appinstalled', () => {
   App.showToast('¡App instalada correctamente!', 'success');
 });
 
+// ── iOS Install Banner ────────────────────────────────────────────────────────
+(function () {
+  const isIOS        = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true;
+  const isSafari     = !/crios|fxios|opios|mercury/i.test(navigator.userAgent);
+
+  if (!isIOS || isStandalone || !isSafari) return;
+  if (sessionStorage.getItem('ios-banner-dismissed')) return;
+
+  setTimeout(() => {
+    const banner = document.getElementById('ios-install-banner');
+    if (banner) banner.hidden = false;
+  }, 2500);
+
+  document.getElementById('ios-install-close')?.addEventListener('click', () => {
+    const banner = document.getElementById('ios-install-banner');
+    if (banner) banner.hidden = true;
+    sessionStorage.setItem('ios-banner-dismissed', '1');
+  });
+}());
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 let wa;
 let auth;
@@ -167,7 +188,7 @@ let auth;
 document.addEventListener('DOMContentLoaded', async () => {
   // Service Worker
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/pwa/sw.js', { scope: '/pwa/' })
+    navigator.serviceWorker.register('/vader/sw.js', { scope: '/vader/' })
       .then(r => console.log('[SW] scope:', r.scope))
       .catch(e => console.warn('[SW] error:', e));
   }
@@ -230,6 +251,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.addEventListener('hashchange', handleHash);
 
   // ── Iniciar flujo ────────────────────────────────────────────────────────
+  // Botón "Iniciar Sesión": forzar navegación en el mismo contexto
+  // (en modo standalone PWA los <a> externos abren en otra ventana)
+  document.getElementById('screen-login-required')
+    ?.querySelectorAll('a[href*="wp-login"], a[href*="wp-admin"]')
+    .forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = link.href;
+      });
+    });
+
   await auth.init();
   handleHash();
 });

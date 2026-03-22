@@ -5,8 +5,33 @@
 
 class WebAuthnManager {
   constructor(apiBase) {
-    this.apiBase = apiBase || '/wp-json/pwa/v1';
-    this.nonce   = null;
+    this.apiBase   = apiBase || '/wp-json/pwa/v1';
+    this.ajaxUrl   = '/wp-admin/admin-ajax.php';
+    this.nonce     = null;
+    this.bootstrap = null; // datos básicos del usuario (antes del check-vip completo)
+
+    // Si WordPress inyectó nonce en la URL al redirigir desde wp-login.php
+    const params = new URLSearchParams(window.location.search);
+    const urlNonce = params.get('_pwa_nonce');
+    if (urlNonce) {
+      this.nonce = urlNonce;
+      const clean = new URL(window.location.href);
+      clean.searchParams.delete('_pwa_nonce');
+      history.replaceState({}, '', clean.toString());
+    }
+  }
+
+  // Obtiene nonce y estado vía admin-ajax.php (siempre reconoce cookies WP)
+  async getBootstrap() {
+    const res  = await fetch(`${this.ajaxUrl}?action=pwa_bootstrap`, {
+      credentials: 'include',
+    });
+    const data = await res.json();
+    this.bootstrap = data;
+    if (data.nonce && !this.nonce) {
+      this.nonce = data.nonce;
+    }
+    return data;
   }
 
   // ── Helpers base64url ─────────────────────────────────────────────────────
@@ -141,6 +166,15 @@ class WebAuthnManager {
       userVerification: 'required',
       timeout:          60000,
     };
+
+    // Si el servidor devuelve la credencial registrada, decirle al navegador
+    // exactamente cuál usar (evita el picker de Google Passkeys)
+    if (challengeData.credential_id) {
+      publicKeyOptions.allowCredentials = [{
+        id:   WebAuthnManager.base64urlToBuffer(challengeData.credential_id),
+        type: 'public-key',
+      }];
+    }
 
     let assertion;
     try {

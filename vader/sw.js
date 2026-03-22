@@ -12,15 +12,15 @@ const CACHE_CONTENT  = `${CACHE_VERSION}-content`;
 const CACHE_IMAGES   = `${CACHE_VERSION}-images`;
 
 const SHELL_ASSETS = [
-  '/pwa/',
-  '/pwa/index.html',
-  '/pwa/css/app.css',
-  '/pwa/js/webauthn.js',
-  '/pwa/js/auth.js',
-  '/pwa/js/app.js',
-  '/pwa/icons/icon-192.png',
-  '/pwa/icons/icon-512.png',
-  '/pwa/offline.html',
+  '/vader/',
+  '/vader/index.html',
+  '/vader/css/app.css',
+  '/vader/js/webauthn.js',
+  '/vader/js/auth.js',
+  '/vader/js/app.js',
+  '/vader/icons/icon-192.png',
+  '/vader/icons/icon-512.png',
+  '/vader/offline.html',
 ];
 
 // ── Install ──────────────────────────────────────────────────────────────────
@@ -57,7 +57,7 @@ self.addEventListener('fetch', (event) => {
   if (!request.url.startsWith('http') || request.method !== 'GET') return;
 
   // API → Network First
-  if (url.pathname.startsWith('/wp-json/pwa/')) {
+  if (url.pathname.startsWith('/wp-json/vader/')) {
     event.respondWith(networkFirst(request, CACHE_CONTENT, 5000));
     return;
   }
@@ -127,7 +127,7 @@ async function staleWhileRevalidate(request, cacheName) {
 }
 
 function offlinePage() {
-  return caches.match('/pwa/offline.html').then(
+  return caches.match('/vader/offline.html').then(
     (r) => r || new Response('<h1>Sin conexión</h1>', { headers: { 'Content-Type': 'text/html' } })
   );
 }
@@ -138,9 +138,9 @@ self.addEventListener('push', (event) => {
   const title   = data.title   ?? 'KMultimedios VIP';
   const options = {
     body:  data.body  ?? 'Nuevo contenido disponible.',
-    icon:  '/pwa/icons/icon-192.png',
-    badge: '/pwa/icons/icon-96.png',
-    data:  { url: data.url ?? '/pwa/' },
+    icon:  '/vader/icons/icon-192.png',
+    badge: '/vader/icons/icon-96.png',
+    data:  { url: data.url ?? '/vader/' },
     vibrate: [200, 100, 200],
   };
   event.waitUntil(self.registration.showNotification(title, options));
@@ -148,6 +148,6 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url = event.notification.data?.url ?? '/pwa/';
+  const url = event.notification.data?.url ?? '/vader/';
   event.waitUntil(clients.openWindow(url));
 });
