@@ -214,9 +214,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   auth = new AuthManager(wa);
 
   // ── Navegación global por data-section ──────────────────────────────────
-  document.body.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-section]');
-    if (btn) App.goTo(btn.dataset.section);
+  document.querySelectorAll('[data-section]').forEach(el => {
+    el.addEventListener('click', () => App.goTo(el.dataset.section));
   });
 
   // ── Botones de autenticación ─────────────────────────────────────────────
