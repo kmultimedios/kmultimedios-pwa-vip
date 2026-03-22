@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Novedades · KMultimedios VIP</title>
+  <meta name="robots" content="noindex">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --green:#00ff41;--green-d:#00cc33;--cyan:#00f0ff;
+      --red:#ff2244;--gold:#ffd700;
+      --dark:#050810;--surface:#0f1419;--surface2:#1a1f2e;
+      --text:#e0e0e0;--muted:#6b7280;
+      --glow-g:rgba(0,255,65,.35);--glow-c:rgba(0,240,255,.35);
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{font-family:'Rajdhani',sans-serif;background:var(--dark);color:var(--text);overflow-x:hidden;line-height:1.6}
+
+    .bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+    .bg__grid{position:absolute;inset:0;
+      background-image:linear-gradient(rgba(0,255,65,.06) 1px,transparent 1px),
+                       linear-gradient(90deg,rgba(0,255,65,.06) 1px,transparent 1px);
+      background-size:50px 50px}
+    .bg__scan{position:absolute;width:100%;height:2px;
+      background:linear-gradient(transparent,var(--green),transparent);
+      animation:scan 6s linear infinite}
+    @keyframes scan{0%{top:-2px}100%{top:100vh}}
+
+    /* HEADER */
+    header{position:sticky;top:0;z-index:100;
+      background:rgba(5,8,16,.96);backdrop-filter:blur(20px);
+      border-bottom:1px solid rgba(0,255,65,.25);box-shadow:0 0 20px rgba(0,255,65,.1)}
+    .header-inner{max-width:980px;margin:0 auto;padding:12px 20px;
+      display:flex;align-items:center;gap:12px}
+    .header-logo{height:36px;filter:drop-shadow(0 0 8px var(--glow-g))}
+    .header-title{font-family:'Orbitron',monospace;font-size:.95rem;color:var(--green)}
+    .header-badge{margin-left:auto;background:rgba(255,34,68,.85);color:#fff;
+      font-family:'Share Tech Mono',monospace;font-size:.6rem;
+      padding:4px 12px;border-radius:20px;letter-spacing:.08em;
+      animation:pls 2s ease-in-out infinite}
+    @keyframes pls{0%,100%{box-shadow:0 0 8px rgba(255,34,68,.5)}50%{box-shadow:0 0 18px rgba(255,34,68,.8)}}
+
+    main{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:40px 20px 70px}
+
+    /* HERO */
+    .hero{text-align:center;padding:50px 24px 44px;margin-bottom:60px;
+      border:1px solid rgba(0,240,255,.2);border-radius:18px;
+      background:linear-gradient(135deg,rgba(0,240,255,.03),rgba(0,255,65,.03));
+      position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:2px;
+      background:linear-gradient(90deg,transparent,var(--cyan),transparent);
+      animation:beam 3s linear infinite}
+    @keyframes beam{to{left:100%}}
+    .hero__logo{height:80px;filter:drop-shadow(0 0 20px var(--glow-g));margin-bottom:22px}
+    .hero__kicker{font-family:'Share Tech Mono',monospace;font-size:.72rem;
+      color:var(--cyan);letter-spacing:.2em;text-transform:uppercase;margin-bottom:14px}
+    .hero__title{font-family:'Orbitron',monospace;font-size:clamp(1.8rem,5vw,3rem);
+      font-weight:900;background:linear-gradient(135deg,var(--green),var(--cyan));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+      background-clip:text;margin-bottom:14px;line-height:1.2}
+    .hero__sub{font-family:'Share Tech Mono',monospace;font-size:.85rem;
+      color:var(--muted);max-width:560px;margin:0 auto 28px;line-height:1.8}
+    .hero__cta{display:inline-flex;align-items:center;gap:10px;
+      background:var(--green);color:#000;
+      font-family:'Orbitron',monospace;font-size:.78rem;font-weight:700;
+      padding:13px 30px;border-radius:8px;text-decoration:none;letter-spacing:.05em;
+      transition:all .2s;box-shadow:0 0 22px var(--glow-g)}
+    .hero__cta:hover{background:var(--cyan);box-shadow:0 0 30px var(--glow-c);transform:translateY(-2px)}
+
+    /* SECTION TITLE */
+    .sh{display:flex;align-items:center;gap:14px;margin-bottom:26px;
+      padding-bottom:12px;border-bottom:1px solid rgba(0,255,65,.15)}
+    .sh__icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;
+      justify-content:center;font-size:1.1rem;flex-shrink:0}
+    .i-g{background:rgba(0,255,65,.12);border:1px solid rgba(0,255,65,.3);color:var(--green)}
+    .i-c{background:rgba(0,240,255,.08);border:1px solid rgba(0,240,255,.3);color:var(--cyan)}
+    .i-d{background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.3);color:var(--gold)}
+    .i-r{background:rgba(255,34,68,.08);border:1px solid rgba(255,34,68,.3);color:var(--red)}
+    .sh__info h2{font-family:'Orbitron',monospace;font-size:1rem;color:var(--green);letter-spacing:.04em}
+    .sh__info p{font-size:.75rem;color:var(--muted);font-family:'Share Tech Mono',monospace;margin-top:2px}
+
+    /* CARDS */
+    .cards{display:grid;gap:16px;margin-bottom:60px}
+    .c2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+    .c3{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+    .card{background:var(--surface);border:1px solid rgba(0,255,65,.12);
+      border-radius:12px;padding:22px;transition:all .2s;position:relative;overflow:hidden}
+    .card:hover{border-color:rgba(0,255,65,.35);transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,255,65,.08)}
+    .card.c-cyan{border-color:rgba(0,240,255,.12)}
+    .card.c-cyan:hover{border-color:rgba(0,240,255,.4);box-shadow:0 8px 28px rgba(0,240,255,.08)}
+    .card.c-gold{border-color:rgba(255,215,0,.12)}
+    .card.c-gold:hover{border-color:rgba(255,215,0,.4);box-shadow:0 8px 28px rgba(255,215,0,.06)}
+    .card__bar{position:absolute;top:0;left:0;width:3px;height:100%;background:var(--green-d)}
+    .c-cyan .card__bar{background:var(--cyan)}
+    .c-gold .card__bar{background:var(--gold)}
+    .card__img{width:56px;height:56px;border-radius:10px;object-fit:contain;
+      background:#fff;padding:4px;margin-bottom:14px}
+    .card__icon{font-size:1.8rem;margin-bottom:12px}
+    .tag{display:inline-block;font-family:'Share Tech Mono',monospace;font-size:.58rem;
+      letter-spacing:.1em;text-transform:uppercase;padding:3px 8px;border-radius:4px;margin-bottom:10px}
+    .tag-n{background:rgba(0,255,65,.12);color:var(--green);border:1px solid rgba(0,255,65,.25)}
+    .tag-u{background:rgba(0,240,255,.08);color:var(--cyan);border:1px solid rgba(0,240,255,.25)}
+    .tag-s{background:rgba(255,215,0,.08);color:var(--gold);border:1px solid rgba(255,215,0,.25)}
+    .card h3{font-size:1.05rem;font-weight:700;color:var(--text);margin-bottom:8px}
+    .card p{font-size:.83rem;color:var(--muted);line-height:1.65}
+
+    /* RADIOS SHOWCASE */
+    .radio-showcase{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:60px}
+    .radio-card{background:var(--surface);border:1px solid rgba(0,240,255,.15);
+      border-radius:14px;padding:20px;text-align:center;transition:all .2s}
+    .radio-card:hover{border-color:var(--cyan);box-shadow:0 0 24px rgba(0,240,255,.12);transform:translateY(-3px)}
+    .radio-card img{width:80px;height:80px;border-radius:12px;object-fit:contain;
+      background:#fff;padding:6px;margin-bottom:12px;
+      box-shadow:0 4px 14px rgba(0,0,0,.4)}
+    .radio-card h3{font-family:'Orbitron',monospace;font-size:.75rem;color:var(--cyan);
+      letter-spacing:.04em;margin-bottom:4px}
+    .radio-card p{font-size:.72rem;color:var(--muted);font-family:'Share Tech Mono',monospace}
+    .radio-card .live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;
+      background:var(--red);margin-right:5px;animation:blink 1.2s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+    @media(max-width:500px){.radio-showcase{grid-template-columns:1fr}}
+
+    /* DEVICE STEPS */
+    .steps{display:flex;flex-direction:column;gap:0;margin-bottom:60px}
+    .step{display:flex;gap:18px;padding:18px 0;border-bottom:1px solid rgba(0,255,65,.08)}
+    .step:last-child{border-bottom:none}
+    .step__num{width:34px;height:34px;border-radius:50%;border:2px solid var(--green);
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+      font-family:'Orbitron',monospace;font-size:.8rem;color:var(--green);
+      background:rgba(0,255,65,.07)}
+    .step h4{font-size:.95rem;font-weight:700;color:var(--text);margin-bottom:3px}
+    .step p{font-size:.82rem;color:var(--muted);line-height:1.6}
+    .step code{font-family:'Share Tech Mono',monospace;font-size:.78rem;
+      background:rgba(0,255,65,.08);color:var(--green);padding:1px 6px;border-radius:3px}
+
+    /* SECURITY SCORE */
+    .score{background:var(--surface);border:1px solid rgba(0,255,65,.15);
+      border-radius:14px;padding:30px;margin-bottom:60px}
+    .score h3{font-family:'Orbitron',monospace;font-size:.8rem;color:var(--muted);
+      letter-spacing:.12em;text-transform:uppercase;text-align:center;margin-bottom:24px}
+    .score-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:20px}
+    .score-item{text-align:center;padding:16px 8px;border-radius:10px;
+      background:rgba(0,255,65,.04);border:1px solid rgba(0,255,65,.1)}
+    .score-item .num{font-family:'Orbitron',monospace;font-size:1.8rem;
+      font-weight:900;color:var(--green);display:block;margin-bottom:6px}
+    .score-item .lbl{font-size:.68rem;color:var(--muted);font-family:'Share Tech Mono',monospace;line-height:1.5}
+
+    /* TIMELINE */
+    .timeline{margin-bottom:60px}
+    .tl{display:flex;gap:18px;padding:16px 0;border-bottom:1px dashed rgba(0,240,255,.1)}
+    .tl:last-child{border-bottom:none}
+    .tl-dot{width:11px;height:11px;border-radius:50%;flex-shrink:0;margin-top:5px}
+    .dot-done{background:var(--green);box-shadow:0 0 8px var(--glow-g)}
+    .dot-wip{background:var(--cyan);box-shadow:0 0 8px var(--glow-c)}
+    .dot-plan{background:var(--gold);box-shadow:0 0 6px rgba(255,215,0,.4)}
+    .dot-fut{background:var(--muted);opacity:.35}
+    .tl-date{font-family:'Share Tech Mono',monospace;font-size:.63rem;color:var(--muted);margin-bottom:3px}
+    .tl-body h4{font-size:.95rem;font-weight:700;color:var(--text);margin-bottom:3px;display:inline}
+    .tl-body p{font-size:.8rem;color:var(--muted);line-height:1.55;margin-top:4px}
+    .tl-st{font-family:'Share Tech Mono',monospace;font-size:.58rem;padding:2px 7px;
+      border-radius:10px;margin-left:8px;vertical-align:middle}
+    .st-done{background:rgba(0,255,65,.12);color:var(--green)}
+    .st-wip{background:rgba(0,240,255,.1);color:var(--cyan)}
+    .st-plan{background:rgba(255,215,0,.1);color:var(--gold)}
+
+    /* ALERT */
+    .alert{display:flex;gap:14px;padding:16px 18px;border-radius:10px;margin-bottom:24px;
+      border:1px solid rgba(0,240,255,.25);background:rgba(0,240,255,.04)}
+    .alert i{color:var(--cyan);font-size:1.1rem;flex-shrink:0;margin-top:3px}
+    .alert p{font-size:.84rem;color:var(--text);line-height:1.6}
+    .alert strong{color:var(--cyan)}
+
+    /* CTA BOX */
+    .cta-box{text-align:center;padding:44px 24px;
+      background:rgba(0,255,65,.03);border:1px solid rgba(0,255,65,.18);border-radius:14px}
+    .cta-box p{font-family:'Orbitron',monospace;font-size:1.05rem;color:var(--green);margin-bottom:10px}
+    .cta-box .sub{font-size:.85rem;color:var(--muted);margin-bottom:26px;
+      font-family:'Share Tech Mono',monospace;font-size:.82rem}
+    .btn-cta{display:inline-flex;align-items:center;gap:10px;
+      background:var(--green);color:#000;font-family:'Orbitron',monospace;
+      font-size:.78rem;font-weight:700;padding:14px 32px;border-radius:8px;
+      text-decoration:none;letter-spacing:.05em;
+      box-shadow:0 0 25px var(--glow-g);transition:all .2s}
+    .btn-cta:hover{background:var(--cyan);box-shadow:0 0 30px var(--glow-c);transform:translateY(-2px)}
+
+    footer{position:relative;z-index:1;border-top:1px solid rgba(0,255,65,.12);
+      padding:26px 20px;text-align:center}
+    footer p{font-family:'Share Tech Mono',monospace;font-size:.68rem;color:var(--muted)}
+    footer a{color:var(--green);text-decoration:none}
+    footer a:hover{color:var(--cyan)}
+
+    @media(max-width:600px){
+      .hero__logo{height:60px}
+      .score-grid{grid-template-columns:repeat(2,1fr)}
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg"><div class="bg__grid"></div><div class="bg__scan"></div></div>
+
+<header>
+  <div class="header-inner">
+    <img src="https://kmultimedios.com/logosk/kmultimedios.png" alt="KM" class="header-logo">
+    <span class="header-title">KMultimedios <span style="color:var(--cyan)">VIP</span></span>
+    <span class="header-badge">● ACTUALIZACIÓN v1.1</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- HERO -->
+  <section class="hero">
+    <img src="https://kmultimedios.com/logosk/kmultimedios.png" alt="KMultimedios" class="hero__logo">
+    <p class="hero__kicker">Sistema actualizado · Marzo 2026</p>
+    <h1 class="hero__title">Vader está evolucionando</h1>
+    <p class="hero__sub">
+      Migramos a un sistema más seguro y exclusivo — biometría real, encriptación de señal,
+      acceso controlado por dispositivo y registro total de auditoría.
+    </p>
+    <a href="/vader/" class="hero__cta">
+      <i class="fas fa-rocket"></i>&nbsp; Abrir la app
+    </a>
+  </section>
+
+  <!-- QUÉ HAY NUEVO -->
+  <div class="sh">
+    <div class="sh__icon i-g"><i class="fas fa-star"></i></div>
+    <div class="sh__info">
+      <h2>Novedades en esta versión</h2>
+      <p>Todo lo que cambia con la actualización v1.1 — Marzo 2026</p>
+    </div>
+  </div>
+
+  <div class="cards c2">
+    <div class="card">
+      <div class="card__bar"></div>
+      <div class="card__icon">🏠</div>
+      <span class="tag tag-n">Nuevo</span>
+      <h3>Pantalla de inicio</h3>
+      <p>Acceso directo a Cámaras, Video, Radios y Ajustes desde una pantalla central. Navegación más clara en móvil y escritorio.</p>
+    </div>
+    <div class="card c-cyan">
+      <div class="card__bar"></div>
+      <div class="card__icon">📺</div>
+      <span class="tag tag-n">Nuevo</span>
+      <h3>Canal de Video en vivo</h3>
+      <p>Sección dedicada para canales de video vía HLS. Reproducción nativa sin iframes, mejor rendimiento en móvil.</p>
+    </div>
+    <div class="card">
+      <div class="card__bar"></div>
+      <div class="card__icon">🔏</div>
+      <span class="tag tag-u">Mejorado</span>
+      <h3>Marca de agua disuasoria</h3>
+      <p>Cada cámara muestra tu email real, IP, contador de frames rotativo y grados. Si alguien graba la pantalla, queda identificado.</p>
+    </div>
+    <div class="card c-cyan">
+      <div class="card__bar"></div>
+      <div class="card__icon">📋</div>
+      <span class="tag tag-n">Nuevo</span>
+      <h3>Auditoría completa</h3>
+      <p>Cada acceso queda registrado: usuario, IP, dispositivo, zona horaria Arizona. Historial de 10,000 eventos en base de datos.</p>
+    </div>
+  </div>
+
+  <!-- RADIOS -->
+  <div class="sh">
+    <div class="sh__icon i-c"><i class="fas fa-radio"></i></div>
+    <div class="sh__info">
+      <h2>3 Radios en vivo — Ahora con logos</h2>
+      <p>Now Playing en tiempo real · Cambio de estación sin interrupciones</p>
+    </div>
+  </div>
+
+  <div class="radio-showcase">
+    <div class="radio-card">
+      <img src="https://kmultimedios.com/logosk/kreactivo.png" alt="Kreactivo">
+      <h3>KREACTIVO</h3>
+      <p><span class="live-dot"></span>Retro Mix · En vivo 24/7</p>
+    </div>
+    <div class="radio-card">
+      <img src="https://kmultimedios.com/logosk/ladelrancho.png" alt="La Del Rancho">
+      <h3>LA DEL RANCHO</h3>
+      <p><span class="live-dot"></span>Regional Mexicana · En vivo 24/7</p>
+    </div>
+    <div class="radio-card">
+      <img src="https://kmultimedios.com/logosk/kdelamor.png" alt="K Del Amor">
+      <h3>K DEL AMOR</h3>
+      <p><span class="live-dot"></span>Romántica · En vivo 24/7</p>
+    </div>
+  </div>
+
+  <!-- DISPOSITIVOS -->
+  <div class="sh">
+    <div class="sh__icon i-c"><i class="fas fa-mobile-alt"></i></div>
+    <div class="sh__info">
+      <h2>Registro de 2 dispositivos</h2>
+      <p>Acceso biométrico personal e intransferible — menos de 30 segundos</p>
+    </div>
+  </div>
+
+  <div class="alert">
+    <i class="fas fa-info-circle"></i>
+    <p>Cada cuenta VIP puede registrar <strong>1 dispositivo móvil</strong> y <strong>1 de escritorio/PC</strong>. La autenticación es con biometría (Face ID, huella, Windows Hello) — imposible de compartir, ligada al hardware del dispositivo.</p>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step__num">1</div>
+      <div>
+        <h4>Entra desde tu celular o PC</h4>
+        <p>Ve a <code>kmultimedios.com/vader/</code> con tu sesión activa de WordPress.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step__num">2</div>
+      <div>
+        <h4>La app detecta el tipo de dispositivo</h4>
+        <p>Automáticamente sabe si es móvil o escritorio y te lleva al registro correcto. Solo confirmas tu nombre de dispositivo (opcional) y tocas el botón.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step__num">3</div>
+      <div>
+        <h4>Confirmas con biometría</h4>
+        <p>Face ID, Touch ID en iPhone/iPad · Huella dactilar en Android · Windows Hello en PC. El proceso completo toma menos de 30 segundos.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step__num">4</div>
+      <div>
+        <h4>Acceso instantáneo de ahí en adelante</h4>
+        <p>La próxima visita solo necesitas tu biometría. Sin contraseñas, sin códigos SMS, sin esperas.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step__num">5</div>
+      <div>
+        <h4>¿Cambias de dispositivo?</h4>
+        <p>Desde <strong>Ajustes → Mis Dispositivos</strong> revocas el anterior y registras el nuevo. Máximo 2 cambios por año por tipo.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEGURIDAD -->
+  <div class="sh">
+    <div class="sh__icon i-r"><i class="fas fa-shield-alt"></i></div>
+    <div class="sh__info">
+      <h2>Seguridad actual del sistema</h2>
+      <p>Capas de protección activas hoy</p>
+    </div>
+  </div>
+
+  <div class="score">
+    <h3>Protecciones activas</h3>
+    <div class="score-grid">
+      <div class="score-item">
+        <span class="num" style="font-size:1.5rem">🔑</span>
+        <span class="lbl">Biometría<br>WebAuthn / Passkeys</span>
+      </div>
+      <div class="score-item">
+        <span class="num">2</span>
+        <span class="lbl">Dispositivos<br>por cuenta VIP</span>
+      </div>
+      <div class="score-item">
+        <span class="num" style="font-size:1.5rem">🛡</span>
+        <span class="lbl">Proxy CORS<br>anti-scraping</span>
+      </div>
+      <div class="score-item">
+        <span class="num" style="font-size:1.5rem">🔏</span>
+        <span class="lbl">Watermark<br>trazable en vivo</span>
+      </div>
+      <div class="score-item">
+        <span class="num">10K</span>
+        <span class="lbl">Eventos de<br>auditoría</span>
+      </div>
+      <div class="score-item">
+        <span class="num" style="font-size:1.5rem">⏰</span>
+        <span class="lbl">Hora zona<br>Phoenix / AZ</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- POR QUÉ MIGRAMOS -->
+  <div class="sh">
+    <div class="sh__icon i-d"><i class="fas fa-exchange-alt"></i></div>
+    <div class="sh__info">
+      <h2>¿Por qué migramos?</h2>
+      <p>El sistema anterior tenía limitaciones importantes de seguridad</p>
+    </div>
+  </div>
+
+  <div class="cards c3">
+    <div class="card c-gold">
+      <div class="card__bar"></div>
+      <div class="card__icon">🔓</div>
+      <h3>Contraseñas = riesgo</h3>
+      <p>Una contraseña se puede compartir o robar. La biometría es personal — está en el chip seguro de tu dispositivo y no puede copiarse.</p>
+    </div>
+    <div class="card c-gold">
+      <div class="card__bar"></div>
+      <div class="card__icon">📡</div>
+      <h3>Señal sin cifrar</h3>
+      <p>El sistema anterior enviaba video sin encriptar. El nuevo cifrará cada segmento con AES-128 — imposible de capturar con VLC o ffmpeg.</p>
+    </div>
+    <div class="card c-gold">
+      <div class="card__bar"></div>
+      <div class="card__icon">👥</div>
+      <h3>Sin control de acceso</h3>
+      <p>Antes no había registro de quién veía qué. Ahora cada sesión queda auditada con IP, dispositivo, hora exacta en zona Phoenix.</p>
+    </div>
+  </div>
+
+  <!-- PRÓXIMAMENTE -->
+  <div class="sh">
+    <div class="sh__icon i-d"><i class="fas fa-clock"></i></div>
+    <div class="sh__info">
+      <h2>Próximamente</h2>
+      <p>Lo que viene en las siguientes versiones</p>
+    </div>
+  </div>
+
+  <div class="timeline">
+    <div class="tl">
+      <div class="tl-dot dot-done"></div>
+      <div class="tl-body">
+        <p class="tl-date">Marzo 2026</p>
+        <h4>Navegación rediseñada + 3 Radios en vivo</h4>
+        <span class="tl-st st-done">✓ Listo</span>
+        <p>Top nav, pantalla de inicio, logos y now-playing en tiempo real.</p>
+      </div>
+    </div>
+    <div class="tl">
+      <div class="tl-dot dot-done"></div>
+      <div class="tl-body">
+        <p class="tl-date">Marzo 2026</p>
+        <h4>Sistema de auditoría de accesos</h4>
+        <span class="tl-st st-done">✓ Listo</span>
+        <p>Registro completo de quién accede, cuándo, desde dónde y con qué dispositivo.</p>
+      </div>
+    </div>
+    <div class="tl">
+      <div class="tl-dot dot-wip"></div>
+      <div class="tl-body">
+        <p class="tl-date">Próximamente</p>
+        <h4>Encriptación AES-128 de señal</h4>
+        <span class="tl-st st-wip">En progreso</span>
+        <p>Los streams de cámara viajarán completamente cifrados. Sin llave de sesión válida, la señal es inútil.</p>
+      </div>
+    </div>
+    <div class="tl">
+      <div class="tl-dot dot-plan"></div>
+      <div class="tl-body">
+        <p class="tl-date">Próximamente</p>
+        <h4>Tokens de sesión temporales (2h)</h4>
+        <span class="tl-st st-plan">Planeado</span>
+        <p>Cada acceso genera un token único que expira automáticamente. Si la membresía vence, el acceso se corta de inmediato.</p>
+      </div>
+    </div>
+    <div class="tl">
+      <div class="tl-dot dot-plan"></div>
+      <div class="tl-body">
+        <p class="tl-date">Próximamente</p>
+        <h4>Comunidad VIP — Foro exclusivo</h4>
+        <span class="tl-st st-plan">Planeado</span>
+        <p>Foro privado para suscriptores activos. Guías, peticiones y novedades. Acceso automático con tu cuenta KMultimedios.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-box">
+    <p>¿Ya registraste tu dispositivo?</p>
+    <p class="sub">El proceso toma menos de 30 segundos. Solo biometría, sin contraseñas.</p>
+    <a href="/vader/" class="btn-cta">
+      <i class="fas fa-fingerprint"></i>&nbsp; Registrar mi dispositivo
+    </a>
+  </div>
+
+</main>
+
+<footer>
+  <p>© 2026 KMultimedios VIP &nbsp;·&nbsp; <a href="/vader/">Abrir app</a> &nbsp;·&nbsp; <a href="https://kmultimedios.com/contacto/">Soporte</a></p>
+  <p style="margin-top:6px">Sistema Vader v1.1 · Actualización Marzo 2026</p>
+</footer>
+
+</body>
+</html>
