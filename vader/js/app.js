@@ -18,10 +18,6 @@ const App = {
 
   // Navegar entre secciones principales con carga lazy
   goTo(section) {
-    // No navegar si auth no terminó (pantallas de carga/login)
-    const authScreens = ['loading','login-required','not-vip','not-supported','slot-blocked','register','verify-failed','error'];
-    if (authScreens.includes(this.currentScreen)) return;
-
     const screenMap = {
       home:     'home',
       cameras:  'main',
