@@ -226,7 +226,7 @@ class PWA_API {
             return self::error('db_error', 'Error guardando el dispositivo.', 500);
         }
 
-        self::log_event('device_registered', $user_id, ['device_type' => $device_type, 'device_name' => $device_name]);
+        PWA_Database::log_audit('device_registered', $user_id, ['device_type' => $device_type, 'device_name' => $device_name]);
 
         return self::response([
             'success'     => true,
@@ -258,14 +258,14 @@ class PWA_API {
         $result   = PWA_WebAuthn::verify_assertion($user_id, $response, $device);
 
         if (is_wp_error($result)) {
-            self::log_event('verify_failed', $user_id, ['error' => $result->get_error_code(), 'device_type' => $device_type]);
+            PWA_Database::log_audit('verify_failed', $user_id, ['error' => $result->get_error_code(), 'device_type' => $device_type]);
             return self::error($result->get_error_code(), $result->get_message(), 400);
         }
 
         // Establecer sesión WordPress (siempre, para renovar cookie y nonce)
         wp_set_current_user($user_id);
 
-        self::log_event('device_verified', $user_id, ['device_type' => $device_type]);
+        PWA_Database::log_audit('device_verified', $user_id, ['device_type' => $device_type]);
 
         $user = get_userdata($user_id);
         return self::response([
@@ -340,9 +340,9 @@ class PWA_API {
         $new_count = PWA_Database::get_replacement_count($user_id, $device_type, $year);
         $blocked   = $new_count >= PWA_Database::MAX_REPLACEMENTS_PER_YEAR;
 
-        self::log_event('device_deleted_by_user', $user_id, [
-            'device_id'   => $device_id,
-            'device_type' => $device_type,
+        PWA_Database::log_audit('device_deleted', $user_id, [
+            'device_id'         => $device_id,
+            'device_type'       => $device_type,
             'replacements_used' => $new_count,
         ]);
 
@@ -370,7 +370,7 @@ class PWA_API {
             return self::error('revoke_failed', 'No se pudo revocar el dispositivo.', 500);
         }
 
-        self::log_event('device_revoked_admin', get_current_user_id(), ['target_user' => $user_id]);
+        PWA_Database::log_audit('device_revoked_admin', get_current_user_id(), ['target_user_id' => $user_id]);
         return self::response(['success' => true, 'message' => 'Dispositivos revocados.']);
     }
 
@@ -420,12 +420,18 @@ class PWA_API {
         $user_id   = get_current_user_id();
         $zones     = PWA_Streams::get_zones_for_api();
         $watermark = PWA_Streams::get_watermark($user_id);
+        $cam_count = PWA_Streams::count_cameras();
+
+        PWA_Database::log_audit('streams_access', $user_id, [
+            'device_type' => PWA_Database::detect_device_type(),
+            'total_cams'  => $cam_count,
+        ]);
 
         return self::response([
             'zones'      => array_values($zones),
             'audio_url'  => PWA_Streams::AUDIO_URL,
             'watermark'  => $watermark,
-            'total_cams' => PWA_Streams::count_cameras(),
+            'total_cams' => $cam_count,
         ]);
     }
 
@@ -460,18 +466,4 @@ class PWA_API {
         return $device_type === 'mobile' ? 'Móvil' : 'Escritorio';
     }
 
-    private static function log_event(string $event, int $user_id, array $data): void {
-        $logs   = get_option('pwa_vip_access_log', []);
-        $logs[] = [
-            'event'   => $event,
-            'user_id' => $user_id,
-            'data'    => $data,
-            'time'    => current_time('mysql'),
-            'ip'      => sanitize_text_field($_SERVER['REMOTE_ADDR'] ?? ''),
-        ];
-        if (count($logs) > 500) {
-            $logs = array_slice($logs, -500);
-        }
-        update_option('pwa_vip_access_log', $logs, false);
-    }
 }

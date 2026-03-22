@@ -18,6 +18,11 @@ class PWA_Database {
         return $wpdb->prefix . 'pwa_device_replacements';
     }
 
+    public static function audit_table(): string {
+        global $wpdb;
+        return $wpdb->prefix . 'pwa_audit_log';
+    }
+
     // ── Instalación / Migración ─────────────────────────────────────────────
     public static function install(): void {
         global $wpdb;
@@ -54,9 +59,27 @@ class PWA_Database {
             UNIQUE KEY unique_user_slot_year (user_id, device_type, year)
         ) {$charset};";
 
+        // Tabla de auditoría de accesos
+        $audit_table = self::audit_table();
+        $sql_audit = "CREATE TABLE {$audit_table} (
+            id          BIGINT(20)   NOT NULL AUTO_INCREMENT,
+            user_id     BIGINT(20)   NOT NULL DEFAULT 0,
+            user_email  VARCHAR(100) NOT NULL DEFAULT '',
+            ip          VARCHAR(45)  NOT NULL DEFAULT '',
+            action      VARCHAR(50)  NOT NULL,
+            device_type VARCHAR(20)  DEFAULT NULL,
+            details     TEXT         DEFAULT NULL,
+            created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY idx_user_id   (user_id),
+            KEY idx_created_at (created_at),
+            KEY idx_action    (action)
+        ) {$charset};";
+
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta($sql_devices);
         dbDelta($sql_replacements);
+        dbDelta($sql_audit);
 
         update_option('pwa_vip_db_version', PWA_VIP_VERSION);
     }
@@ -250,5 +273,58 @@ class PWA_Database {
     public static function count_active_devices(): int {
         global $wpdb;
         return (int) $wpdb->get_var("SELECT COUNT(*) FROM " . self::table_name() . " WHERE is_active = 1");
+    }
+
+    // ── Auditoría de accesos ──────────────────────────────────────────────────
+
+    public static function log_audit(string $action, int $user_id = 0, array $details = []): void {
+        global $wpdb;
+
+        $user_email = '';
+        if ($user_id) {
+            $user = get_userdata($user_id);
+            $user_email = $user ? $user->user_email : '';
+        }
+
+        $device_type = $details['device_type'] ?? null;
+        unset($details['device_type']);
+
+        $wpdb->insert(
+            self::audit_table(),
+            [
+                'user_id'     => $user_id,
+                'user_email'  => $user_email,
+                'ip'          => sanitize_text_field($_SERVER['REMOTE_ADDR'] ?? ''),
+                'action'      => $action,
+                'device_type' => $device_type,
+                'details'     => $details ? wp_json_encode($details, JSON_UNESCAPED_UNICODE) : null,
+                'created_at'  => current_time('mysql'),
+            ],
+            ['%d', '%s', '%s', '%s', '%s', '%s', '%s']
+        );
+
+        // Limpiar registros antiguos: mantener máximo 10,000
+        $count = (int) $wpdb->get_var("SELECT COUNT(*) FROM " . self::audit_table());
+        if ($count > 10000) {
+            $wpdb->query("DELETE FROM " . self::audit_table() . " ORDER BY id ASC LIMIT " . ($count - 10000));
+        }
+    }
+
+    public static function get_audit_log(int $limit = 200, int $offset = 0): array {
+        global $wpdb;
+        return $wpdb->get_results($wpdb->prepare(
+            "SELECT * FROM " . self::audit_table() . " ORDER BY id DESC LIMIT %d OFFSET %d",
+            $limit, $offset
+        )) ?: [];
+    }
+
+    public static function count_audit_log(): int {
+        global $wpdb;
+        return (int) $wpdb->get_var("SELECT COUNT(*) FROM " . self::audit_table());
+    }
+
+    public static function clear_audit_log(): void {
+        global $wpdb;
+        $wpdb->query("TRUNCATE TABLE " . self::audit_table());
     }
 }

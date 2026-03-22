@@ -115,35 +115,94 @@ class PWA_Admin {
     }
 
     public static function render_logs(): void {
-        $logs = array_reverse(get_option('pwa_vip_access_log', []));
+        // Acción: limpiar log
+        if (isset($_POST['pwa_clear_audit']) && check_admin_referer('pwa_clear_audit')) {
+            PWA_Database::clear_audit_log();
+            echo '<div class="notice notice-success is-dismissible"><p>Registro de auditoría limpiado.</p></div>';
+        }
+
+        $page    = max(1, (int) ($_GET['plog'] ?? 1));
+        $limit   = 100;
+        $offset  = ($page - 1) * $limit;
+        $logs    = PWA_Database::get_audit_log($limit, $offset);
+        $total   = PWA_Database::count_audit_log();
+        $pages   = (int) ceil($total / $limit);
+
+        $action_labels = [
+            'streams_access'      => ['Vio cámaras',        '#1a6e1a', '#d4edda'],
+            'device_verified'     => ['Autenticó biometría','#0d4f8a', '#d0e8ff'],
+            'device_registered'   => ['Registró dispositivo','#5a3b8a','#ede0ff'],
+            'device_deleted'      => ['Eliminó dispositivo', '#8a5a00', '#fff3cd'],
+            'device_revoked_admin'=> ['Admin revocó',       '#721c24', '#f8d7da'],
+            'verify_failed'       => ['Fallo biometría',    '#721c24', '#f8d7da'],
+        ];
         ?>
         <div class="wrap">
-            <h1>PWA VIP &mdash; Registro de Accesos</h1>
+            <h1>PWA VIP &mdash; Auditoría de Accesos</h1>
+            <p class="description">
+                Total de registros: <strong><?php echo number_format($total); ?></strong>
+                &nbsp;|&nbsp;
+                Página <?php echo $page; ?> de <?php echo max(1, $pages); ?>
+            </p>
+
+            <form method="post" style="margin-bottom:12px;"
+                  onsubmit="return confirm('¿Limpiar todo el registro de auditoría?');">
+                <?php wp_nonce_field('pwa_clear_audit'); ?>
+                <input type="hidden" name="pwa_clear_audit" value="1">
+                <button type="submit" class="button button-link-delete">Limpiar registro</button>
+            </form>
+
             <?php if (empty($logs)): ?>
-                <div class="notice notice-info"><p>No hay registros de acceso aún.</p></div>
+                <div class="notice notice-info"><p>No hay registros de auditoría aún.</p></div>
             <?php else: ?>
             <table class="wp-list-table widefat fixed striped">
                 <thead>
                     <tr>
-                        <th>Fecha</th>
-                        <th>Evento</th>
-                        <th>Usuario ID</th>
-                        <th>IP</th>
-                        <th>Datos</th>
+                        <th style="width:145px">Fecha/Hora</th>
+                        <th style="width:160px">Acción</th>
+                        <th>Usuario</th>
+                        <th style="width:125px">IP</th>
+                        <th style="width:80px">Dispositivo</th>
+                        <th>Detalles</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach (array_slice($logs, 0, 200) as $log): ?>
+                    <?php foreach ($logs as $log):
+                        $label = $action_labels[$log->action] ?? [$log->action, '#444', '#eee'];
+                        $details = $log->details ? json_decode($log->details, true) : [];
+                        $details_str = '';
+                        if ($details) {
+                            $parts = [];
+                            foreach ($details as $k => $v) $parts[] = "<b>{$k}</b>: " . esc_html($v);
+                            $details_str = implode(' &nbsp;·&nbsp; ', $parts);
+                        }
+                    ?>
                     <tr>
-                        <td><?php echo esc_html($log['time']); ?></td>
-                        <td><code><?php echo esc_html($log['event']); ?></code></td>
-                        <td><?php echo (int) $log['user_id']; ?></td>
-                        <td><?php echo esc_html($log['ip']); ?></td>
-                        <td><?php echo esc_html(json_encode($log['data'])); ?></td>
+                        <td style="font-size:12px"><?php echo esc_html($log->created_at); ?></td>
+                        <td>
+                            <span style="display:inline-block;padding:2px 7px;border-radius:3px;font-size:11px;font-weight:600;
+                                         color:<?php echo $label[1]; ?>;background:<?php echo $label[2]; ?>">
+                                <?php echo esc_html($label[0]); ?>
+                            </span>
+                        </td>
+                        <td style="font-size:12px"><?php echo esc_html($log->user_email ?: '—'); ?></td>
+                        <td style="font-size:12px;font-family:monospace"><?php echo esc_html($log->ip); ?></td>
+                        <td style="font-size:11px"><?php echo esc_html($log->device_type ?: '—'); ?></td>
+                        <td style="font-size:11px"><?php echo $details_str ?: '—'; ?></td>
                     </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
+
+            <?php if ($pages > 1): ?>
+            <div class="tablenav bottom" style="margin-top:8px">
+                <?php for ($i = 1; $i <= $pages; $i++): ?>
+                    <a href="?page=pwa-vip-logs&plog=<?php echo $i; ?>"
+                       class="button<?php echo $i === $page ? ' button-primary' : ''; ?>"
+                       style="margin:2px"><?php echo $i; ?></a>
+                <?php endfor; ?>
+            </div>
+            <?php endif; ?>
             <?php endif; ?>
         </div>
         <?php
