@@ -945,7 +945,6 @@ img { max-width: 100%; display: block; }
 
 /* ── Screen CC ───────────────────────────────────────────────── */
 .screen--cc {
-  display: flex;
   flex-direction: column;
   background: var(--cc-bg);
   color: var(--cc-green);
