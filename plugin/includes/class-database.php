@@ -37,14 +37,16 @@ class PWA_Database {
             credential_id   VARCHAR(512)            NOT NULL COMMENT 'WebAuthn credential ID (base64url)',
             public_key      TEXT                    NOT NULL COMMENT 'COSE public key (base64url)',
             device_name     VARCHAR(255)            DEFAULT '',
-            sign_count      BIGINT(20)              DEFAULT 0,
-            registered_date DATETIME                DEFAULT CURRENT_TIMESTAMP,
-            last_access     DATETIME                DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-            is_active       TINYINT(1)              DEFAULT 1,
-            deleted_date    DATETIME                DEFAULT NULL,
-            deleted_by_user TINYINT(1)              DEFAULT 0,
+            sign_count         BIGINT(20)              DEFAULT 0,
+            device_fingerprint VARCHAR(64)             DEFAULT NULL COMMENT 'Hardware fingerprint para reconocimiento sin cookies',
+            registered_date    DATETIME                DEFAULT CURRENT_TIMESTAMP,
+            last_access        DATETIME                DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            is_active          TINYINT(1)              DEFAULT 1,
+            deleted_date       DATETIME                DEFAULT NULL,
+            deleted_by_user    TINYINT(1)              DEFAULT 0,
             PRIMARY KEY (id),
-            UNIQUE KEY unique_cred_id (credential_id(255))
+            UNIQUE KEY unique_cred_id (credential_id(255)),
+            KEY idx_fingerprint (device_fingerprint)
         ) {$charset};";
 
         // Tabla de tracking de reemplazos anuales
@@ -156,21 +158,43 @@ class PWA_Database {
         ));
     }
 
-    public static function save_device(int $user_id, string $device_type, string $credential_id, string $public_key, string $device_name = ''): bool {
+    public static function save_device(int $user_id, string $device_type, string $credential_id, string $public_key, string $device_name = '', string $fingerprint = ''): bool {
         global $wpdb;
         $result = $wpdb->insert(
             self::table_name(),
             [
-                'user_id'       => $user_id,
-                'device_type'   => $device_type,
-                'credential_id' => $credential_id,
-                'public_key'    => $public_key,
-                'device_name'   => sanitize_text_field($device_name),
-                'sign_count'    => 0,
+                'user_id'            => $user_id,
+                'device_type'        => $device_type,
+                'credential_id'      => $credential_id,
+                'public_key'         => $public_key,
+                'device_name'        => sanitize_text_field($device_name),
+                'sign_count'         => 0,
+                'device_fingerprint' => $fingerprint ?: null,
             ],
-            ['%d', '%s', '%s', '%s', '%s', '%d']
+            ['%d', '%s', '%s', '%s', '%s', '%d', '%s']
         );
         return $result !== false;
+    }
+
+    public static function get_device_by_fingerprint(int $user_id, string $fingerprint): ?object {
+        global $wpdb;
+        return $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM " . self::table_name() . "
+             WHERE user_id = %d AND device_fingerprint = %s AND is_active = 1
+             LIMIT 1",
+            $user_id, $fingerprint
+        ));
+    }
+
+    public static function update_fingerprint(int $device_id, string $fingerprint): void {
+        global $wpdb;
+        $wpdb->update(
+            self::table_name(),
+            ['device_fingerprint' => $fingerprint, 'last_access' => current_time('mysql')],
+            ['id' => $device_id],
+            ['%s', '%s'],
+            ['%d']
+        );
     }
 
     public static function update_sign_count(int $device_id, int $sign_count): void {
@@ -298,7 +322,7 @@ class PWA_Database {
                 'action'      => $action,
                 'device_type' => $device_type,
                 'details'     => $details ? wp_json_encode($details, JSON_UNESCAPED_UNICODE) : null,
-                'created_at'  => current_time('mysql'),
+                'created_at'  => wp_date('Y-m-d H:i:s'),
             ],
             ['%d', '%s', '%s', '%s', '%s', '%s', '%s']
         );

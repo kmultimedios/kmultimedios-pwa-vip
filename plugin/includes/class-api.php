@@ -70,6 +70,11 @@ class PWA_API {
             'callback'            => [self::class, 'get_streams'],
             'permission_callback' => [self::class, 'require_vip_device'],
         ]);
+        register_rest_route(self::NAMESPACE, '/check-fingerprint', [
+            'methods'             => 'POST',
+            'callback'            => [self::class, 'check_fingerprint'],
+            'permission_callback' => '__return_true',
+        ]);
     }
 
     // ── Permission callbacks ─────────────────────────────────────────────────
@@ -213,13 +218,15 @@ class PWA_API {
         }
 
         $device_name = sanitize_text_field($body['device_name'] ?? '') ?: self::detect_device_name($request, $device_type);
+        $fingerprint = sanitize_text_field($body['fingerprint'] ?? '');
 
         $saved = PWA_Database::save_device(
             $user_id,
             $device_type,
             $result['credential_id'],
             $result['public_key'],
-            $device_name
+            $device_name,
+            $fingerprint
         );
 
         if (!$saved) {
@@ -445,6 +452,51 @@ class PWA_API {
             'registered_date' => $d->registered_date,
             'last_access'     => $d->last_access,
         ];
+    }
+
+    // ── Fingerprint check ────────────────────────────────────────────────────
+
+    public static function check_fingerprint(WP_REST_Request $request): WP_REST_Response {
+        $body        = $request->get_json_params();
+        $user_id     = (int) ($body['user_id']     ?? 0);
+        $fingerprint = sanitize_text_field($body['fingerprint'] ?? '');
+
+        if (!$user_id || !$fingerprint) {
+            return self::error('missing_data', 'user_id y fingerprint requeridos.', 400);
+        }
+
+        if (!PWA_PMP::is_vip($user_id)) {
+            return self::error('not_vip', 'Acceso exclusivo para miembros VIP.', 403);
+        }
+
+        $device = PWA_Database::get_device_by_fingerprint($user_id, $fingerprint);
+
+        if (!$device) {
+            return self::error('fp_no_match', 'Dispositivo no reconocido.', 404);
+        }
+
+        // Fingerprint coincide → actualizar last_access y renovar sesión
+        PWA_Database::update_fingerprint($device->id, $fingerprint);
+        wp_set_current_user($user_id);
+        wp_set_auth_cookie($user_id, true);
+
+        $user  = get_userdata($user_id);
+        $nonce = wp_create_nonce('wp_rest');
+
+        PWA_Database::log_audit('fingerprint_login', $user_id, [
+            'device_type' => $device->device_type,
+            'device_name' => $device->device_name,
+        ]);
+
+        return self::response([
+            'success'      => true,
+            'match'        => true,
+            'device_type'  => $device->device_type,
+            'device_name'  => $device->device_name,
+            'display_name' => $user ? $user->display_name : '',
+            'level_name'   => 'VIP',
+            'nonce'        => $nonce,
+        ]);
     }
 
     private static function response(array $data, int $status = 200): WP_REST_Response {

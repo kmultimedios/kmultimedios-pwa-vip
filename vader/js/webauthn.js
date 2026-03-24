@@ -137,9 +137,13 @@ class WebAuthnManager {
       throw new Error(`Error de autenticación: ${err.message}`);
     }
 
-    // 5. Enviar al servidor
+    // 5. Enviar al servidor (incluye fingerprint del hardware)
+    const fingerprint = await DeviceFingerprint.generate();
+    DeviceFingerprint.save(fingerprint);
+
     const payload = {
       device_name: deviceName,
+      fingerprint,
       response: {
         id:   credential.id,
         type: credential.type,

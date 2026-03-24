@@ -79,13 +79,47 @@ class AuthManager {
         return;
       }
 
-      // Tiene dispositivo en esta ranura → verificar
-      await this.doVerify();
+      // Tiene dispositivo en esta ranura → intentar login silencioso por fingerprint primero
+      const silentOk = await this.tryFingerprintLogin();
+      if (!silentOk) await this.doVerify();
 
     } catch (err) {
       console.error('[Auth] init error:', err);
       App.showScreen('error');
       App.showMessage(err.message || 'Error de conexión.', 'error');
+    }
+  }
+
+  // ── Login silencioso por fingerprint ─────────────────────────────────────
+
+  async tryFingerprintLogin() {
+    try {
+      const fp = await DeviceFingerprint.generate();
+      DeviceFingerprint.save(fp);
+
+      const res = await fetch(`${this.wa.apiBase}/check-fingerprint`, {
+        method:      'POST',
+        credentials: 'include',
+        headers:     { 'Content-Type': 'application/json' },
+        body:        JSON.stringify({ user_id: this.user.user_id, fingerprint: fp }),
+      });
+
+      if (!res.ok) return false;
+
+      const data = await res.json();
+      if (!data.success) return false;
+
+      // Mismo dispositivo reconocido — acceso silencioso
+      if (data.nonce) this.wa.nonce = data.nonce;
+      this.user.display_name = data.display_name || this.user.display_name;
+      this.user.level_name   = data.level_name   || this.user.level_name;
+      this.updateUserUI();
+      this.isReady = true;
+      App.goTo('home');
+      return true;
+
+    } catch (e) {
+      return false; // Falla silenciosa → caer en WebAuthn
     }
   }
 
