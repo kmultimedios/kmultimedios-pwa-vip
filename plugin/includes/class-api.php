@@ -272,6 +272,12 @@ class PWA_API {
         // Establecer sesión WordPress (siempre, para renovar cookie y nonce)
         wp_set_current_user($user_id);
 
+        // Guardar huella si el dispositivo aún no la tiene (para login silencioso futuro)
+        $fingerprint = sanitize_text_field($body['fingerprint'] ?? '');
+        if ($fingerprint && empty($device->device_fingerprint)) {
+            PWA_Database::update_fingerprint((int) $device->id, $fingerprint);
+        }
+
         PWA_Database::log_audit('device_verified', $user_id, ['device_type' => $device_type]);
 
         $user = get_userdata($user_id);

@@ -188,8 +188,13 @@ class WebAuthnManager {
       throw new Error(`Error de verificación: ${err.message}`);
     }
 
+    // Incluir huella para que el servidor la guarde si el dispositivo aún no la tiene
+    const fingerprint = await DeviceFingerprint.generate();
+    DeviceFingerprint.save(fingerprint);
+
     const payload = {
       user_id: userId,
+      fingerprint,
       response: {
         id:   assertion.id,
         type: assertion.type,
