@@ -214,7 +214,7 @@ class PWA_API {
 
         $result = PWA_WebAuthn::verify_registration($user_id, $response);
         if (is_wp_error($result)) {
-            return self::error($result->get_error_code(), $result->get_message(), 400);
+            return self::error($result->get_error_code(), $result->get_error_message(), 400);
         }
 
         $device_name = sanitize_text_field($body['device_name'] ?? '') ?: self::detect_device_name($request, $device_type);
@@ -266,7 +266,7 @@ class PWA_API {
 
         if (is_wp_error($result)) {
             PWA_Database::log_audit('verify_failed', $user_id, ['error' => $result->get_error_code(), 'device_type' => $device_type]);
-            return self::error($result->get_error_code(), $result->get_message(), 400);
+            return self::error($result->get_error_code(), $result->get_error_message(), 400);
         }
 
         // Establecer sesión WordPress (siempre, para renovar cookie y nonce)

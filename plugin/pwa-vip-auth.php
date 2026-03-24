@@ -4,7 +4,7 @@
  * Plugin URI:  https://kmultimedios.com
  * Description: PWA con autenticación WebAuthn para usuarios VIP de Paid Memberships Pro.
  *              Restringe la instalación a UN solo dispositivo por usuario.
- * Version:     1.1.0
+ * Version:     1.2.0
  * Author:      KMultimedios
  * Author URI:  https://kmultimedios.com
  * Text Domain: pwa-vip-auth
@@ -13,7 +13,7 @@
 
 defined('ABSPATH') || exit;
 
-define('PWA_VIP_VERSION',  '1.1.0');
+define('PWA_VIP_VERSION',  '1.2.0');
 define('PWA_VIP_DIR',      plugin_dir_path(__FILE__));
 define('PWA_VIP_URL',      plugin_dir_url(__FILE__));
 define('PWA_VIP_BASENAME', plugin_basename(__FILE__));
