@@ -61,6 +61,10 @@ function pwa_vip_auth_init(): void {
     // AJAX bootstrap: permite que la PWA obtenga nonce + estado sin necesitar nonce previo
     add_action('wp_ajax_pwa_bootstrap',        'pwa_vip_ajax_bootstrap');
     add_action('wp_ajax_nopriv_pwa_bootstrap', 'pwa_vip_ajax_bootstrap');
+
+    // AJAX fingerprint login: establece sesión completa (cookies funcionan bien en admin-ajax)
+    add_action('wp_ajax_nopriv_pwa_fingerprint_login', 'pwa_fingerprint_login_handler');
+    add_action('wp_ajax_pwa_fingerprint_login',        'pwa_fingerprint_login_handler');
 }
 
 function pwa_vip_inject_nonce_on_redirect(string $redirect_to, string $requested, $user): string {
@@ -91,6 +95,46 @@ function pwa_vip_ajax_bootstrap(): void {
         'user_id'      => $user_id,
         'display_name' => $user->display_name,
         'email'        => $user->user_email,
+    ]);
+}
+
+// ── Fingerprint login via admin-ajax ────────────────────────────────────────
+function pwa_fingerprint_login_handler(): void {
+    $user_id     = (int) ($_POST['user_id']     ?? 0);
+    $fingerprint = sanitize_text_field($_POST['fingerprint'] ?? '');
+
+    if (!$user_id || !$fingerprint) {
+        wp_send_json_error(['message' => 'Datos requeridos.'], 400);
+    }
+
+    if (!PWA_PMP::is_vip($user_id)) {
+        wp_send_json_error(['message' => 'Acceso VIP requerido.'], 403);
+    }
+
+    $device = PWA_Database::get_device_by_fingerprint($user_id, $fingerprint);
+    if (!$device) {
+        wp_send_json_error(['message' => 'Dispositivo no reconocido.'], 404);
+    }
+
+    // Actualizar last_access y establecer sesión completa
+    PWA_Database::update_fingerprint((int) $device->id, $fingerprint);
+    wp_set_current_user($user_id);
+    wp_set_auth_cookie($user_id, true);
+
+    $user  = get_userdata($user_id);
+    $nonce = wp_create_nonce('wp_rest');
+
+    PWA_Database::log_audit('fingerprint_login', $user_id, [
+        'device_type' => $device->device_type,
+        'device_name' => $device->device_name,
+    ]);
+
+    wp_send_json_success([
+        'device_type'  => $device->device_type,
+        'device_name'  => $device->device_name,
+        'display_name' => $user ? $user->display_name : '',
+        'level_name'   => PWA_PMP::get_level_name($user_id),
+        'nonce'        => $nonce,
     ]);
 }
 

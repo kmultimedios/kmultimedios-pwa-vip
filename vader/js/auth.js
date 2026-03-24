@@ -97,11 +97,16 @@ class AuthManager {
       const fp = await DeviceFingerprint.generate();
       DeviceFingerprint.save(fp);
 
-      const res = await fetch(`${this.wa.apiBase}/check-fingerprint`, {
+      // Usar admin-ajax para establecer sesión completa (cookies funcionan correctamente)
+      const form = new FormData();
+      form.append('action',      'pwa_fingerprint_login');
+      form.append('user_id',     this.user.user_id);
+      form.append('fingerprint', fp);
+
+      const res = await fetch(this.wa.ajaxUrl, {
         method:      'POST',
         credentials: 'include',
-        headers:     { 'Content-Type': 'application/json' },
-        body:        JSON.stringify({ user_id: this.user.user_id, fingerprint: fp }),
+        body:        form,
       });
 
       if (!res.ok) return false;
@@ -110,9 +115,9 @@ class AuthManager {
       if (!data.success) return false;
 
       // Mismo dispositivo reconocido — acceso silencioso
-      if (data.nonce) this.wa.nonce = data.nonce;
-      this.user.display_name = data.display_name || this.user.display_name;
-      this.user.level_name   = data.level_name   || this.user.level_name;
+      if (data.data?.nonce) this.wa.nonce = data.data.nonce;
+      this.user.display_name = data.data?.display_name || this.user.display_name;
+      this.user.level_name   = data.data?.level_name   || this.user.level_name;
       this.updateUserUI();
       this.isReady = true;
       App.goTo('home');
