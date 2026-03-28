@@ -171,21 +171,24 @@ class PWA_API {
         $is_blocked  = !$has_slot && PWA_Database::user_is_blocked_for_slot($user_id, $device_type);
         $challenge   = PWA_WebAuthn::generate_challenge($user_id);
 
-        // Si el usuario ya tiene dispositivo, devolver credential_id para allowCredentials
-        $credential_id = null;
-        if ($has_slot) {
-            $device = PWA_Database::get_device_by_user_and_type($user_id, $device_type);
-            $credential_id = $device ? $device->credential_id : null;
+        // Devolver TODAS las credenciales activas del usuario para allowCredentials
+        // (evita mismatch si el passkey guardado en el dispositivo difiere del slot actual)
+        $all_devices    = PWA_Database::get_all_user_devices($user_id);
+        $credential_ids = [];
+        foreach ($all_devices as $d) {
+            if ($d) $credential_ids[] = $d->credential_id;
         }
+        $credential_id = $all_devices[$device_type]->credential_id ?? null;
 
         return self::response([
-            'challenge'     => $challenge,
-            'rp_id'         => PWA_WebAuthn::RP_ID,
-            'user_id'       => $user_id,
-            'device_type'   => $device_type,
-            'slot_available'=> !$has_slot,
-            'is_blocked'    => $is_blocked,
-            'credential_id' => $credential_id,
+            'challenge'      => $challenge,
+            'rp_id'          => PWA_WebAuthn::RP_ID,
+            'user_id'        => $user_id,
+            'device_type'    => $device_type,
+            'slot_available' => !$has_slot,
+            'is_blocked'     => $is_blocked,
+            'credential_id'  => $credential_id,   // retrocompatibilidad
+            'credential_ids' => $credential_ids,  // todos los passkeys del usuario
         ]);
     }
 
@@ -255,9 +258,20 @@ class PWA_API {
             return self::error('not_vip', 'Acceso exclusivo para miembros VIP.', 403);
         }
 
-        $device = PWA_Database::get_device_by_user_and_type($user_id, $device_type);
+        // Buscar dispositivo por credential_id del assertion primero (más exacto),
+        // luego por user/tipo como fallback (cubre casos de mismatch de passkey)
+        $received_id = sanitize_text_field($body['response']['id'] ?? '');
+        $device      = null;
+        if ($received_id) {
+            $device = PWA_Database::get_device_by_credential_id($received_id);
+            if ($device && (int) $device->user_id !== $user_id) {
+                $device = null; // La credencial no pertenece a este usuario
+            }
+        }
         if (!$device) {
-            // El dispositivo de esta ranura no existe → puede registrarse
+            $device = PWA_Database::get_device_by_user_and_type($user_id, $device_type);
+        }
+        if (!$device) {
             return self::error('no_device_for_slot', 'Este tipo de dispositivo no está registrado. Por favor, regístralo.', 404);
         }
 
@@ -274,7 +288,7 @@ class PWA_API {
 
         // Guardar huella si el dispositivo aún no la tiene (para login silencioso futuro)
         $fingerprint = sanitize_text_field($body['fingerprint'] ?? '');
-        if ($fingerprint && empty($device->device_fingerprint)) {
+        if ($fingerprint) {
             PWA_Database::update_fingerprint((int) $device->id, $fingerprint);
         }
 
@@ -431,7 +445,7 @@ class PWA_API {
 
     public static function get_streams(WP_REST_Request $request): WP_REST_Response {
         $user_id   = get_current_user_id();
-        $zones     = PWA_Streams::get_zones_for_api();
+        $zones     = PWA_Streams::get_zones_for_api($user_id);
         $watermark = PWA_Streams::get_watermark($user_id);
         $cam_count = PWA_Streams::count_cameras();
 

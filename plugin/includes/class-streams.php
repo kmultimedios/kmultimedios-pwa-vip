@@ -8,8 +8,19 @@ defined('ABSPATH') || exit;
 
 class PWA_Streams {
 
-    const PROXY_BASE = 'https://videoplus.kmultimedios.com';
-    const AUDIO_URL  = 'https://streamers.kmultiradio.com/8002/stream';
+    const PROXY_BASE   = 'https://proxy.kmultimedios.com';
+    const AUDIO_URL    = 'https://streamers.kmultiradio.com/8002/stream';
+    const SECRET_KEY   = 'videoplus_secret_2025';
+    const TOKEN_EXPIRY = 300; // 5 minutos
+
+    // Map hls_key → camera_id (debe coincidir con cameras.json del proxy)
+    const CAMERA_IDS = [
+        'proxy_e285327477b6d4ff' => '69532ff72565c',
+        'proxy_148a60d3da5b4f5f' => '69533a3e615d7',
+        'proxy_dd020195b1320f75' => '69533a6cb0349',
+        'proxy_eee9c86c2c3c67b8' => '69533ace93550',
+        'proxy_4065bd7c5d3a9e9e' => '69533af07a5aa',
+    ];
 
     /**
      * Configuración completa de zonas y cámaras.
@@ -170,22 +181,32 @@ class PWA_Streams {
 
     /**
      * Construye la URL HLS de un stream proxy dado su key.
+     * Si se pasa user_id, genera una URL con token firmado.
      */
-    public static function build_proxy_url(string $hls_key): string {
-        return self::PROXY_BASE . '/hls/protected/' . $hls_key . '.m3u8';
+    public static function build_proxy_url(string $hls_key, int $user_id = 0): string {
+        $base = self::PROXY_BASE . '/hls/protected/' . $hls_key . '.m3u8';
+        if ($user_id <= 0 || empty(self::CAMERA_IDS[$hls_key])) {
+            return $base;
+        }
+        $camera_id = self::CAMERA_IDS[$hls_key];
+        $expires   = time() + self::TOKEN_EXPIRY;
+        $secret    = hash('sha256', self::SECRET_KEY);
+        $payload   = $camera_id . '|' . $expires . '|' . $user_id;
+        $token     = hash_hmac('sha256', $payload, $secret);
+        return $base . '?token=' . urlencode($token) . '&expires=' . $expires . '&user_id=' . $user_id;
     }
 
     /**
      * Prepara las zonas para la API: sustituye hls_key por hls_url completa.
      * No expone los keys originales al cliente.
      */
-    public static function get_zones_for_api(): array {
+    public static function get_zones_for_api(int $user_id = 0): array {
         $zones = self::get_zones();
         foreach ($zones as &$zone) {
             foreach ($zone['sections'] as &$section) {
                 foreach ($section['cameras'] as &$cam) {
                     if (!empty($cam['hls_key'])) {
-                        $cam['hls_url'] = self::build_proxy_url($cam['hls_key']);
+                        $cam['hls_url'] = self::build_proxy_url($cam['hls_key'], $user_id);
                         unset($cam['hls_key']); // nunca exponer la key raw
                     }
                 }

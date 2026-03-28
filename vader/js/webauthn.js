@@ -171,13 +171,16 @@ class WebAuthnManager {
       timeout:          60000,
     };
 
-    // Si el servidor devuelve la credencial registrada, decirle al navegador
-    // exactamente cuál usar (evita el picker de Google Passkeys)
-    if (challengeData.credential_id) {
-      publicKeyOptions.allowCredentials = [{
-        id:   WebAuthnManager.base64urlToBuffer(challengeData.credential_id),
+    // Incluir TODAS las credenciales del usuario para que el navegador
+    // pueda usar cualquier passkey registrada (evita mismatch de credential_id)
+    const credIds = challengeData.credential_ids?.length
+      ? challengeData.credential_ids
+      : (challengeData.credential_id ? [challengeData.credential_id] : []);
+    if (credIds.length > 0) {
+      publicKeyOptions.allowCredentials = credIds.map(id => ({
+        id:   WebAuthnManager.base64urlToBuffer(id),
         type: 'public-key',
-      }];
+      }));
     }
 
     let assertion;

@@ -6,7 +6,7 @@
  *   - Imágenes             → Stale While Revalidate
  */
 
-const CACHE_VERSION  = 'km-vip-v1.0.4';
+const CACHE_VERSION  = 'km-vip-v1.0.8';
 const CACHE_SHELL    = `${CACHE_VERSION}-shell`;
 const CACHE_CONTENT  = `${CACHE_VERSION}-content`;
 const CACHE_IMAGES   = `${CACHE_VERSION}-images`;
@@ -55,6 +55,9 @@ self.addEventListener('fetch', (event) => {
 
   // Ignorar chrome-extension y non-GET para cachear
   if (!request.url.startsWith('http') || request.method !== 'GET') return;
+
+  // Ignorar peticiones al proxy de streaming (HLS, segmentos, claves AES)
+  if (url.hostname === 'proxy.kmultimedios.com') return;
 
   // API → Network First
   if (url.pathname.startsWith('/wp-json/vader/')) {

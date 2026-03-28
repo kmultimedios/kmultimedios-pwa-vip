@@ -52,6 +52,11 @@ class AuthManager {
       const slotBlocked  = dtype === 'mobile'  ? status.mobile_blocked  : status.desktop_blocked;
 
       if (!hasThisSlot) {
+        // Intentar fingerprint incluso si check-vip no encontró dispositivo
+        // (puede pasar por caché o sesión desincronizada)
+        const silentOk = await this.tryFingerprintLogin();
+        if (silentOk) return;
+
         // Verificar soporte WebAuthn
         const supported = await WebAuthnManager.isAvailable();
         if (!supported) {
@@ -114,8 +119,11 @@ class AuthManager {
       const data = await res.json();
       if (!data.success) return false;
 
-      // Mismo dispositivo reconocido — acceso silencioso
-      if (data.data?.nonce) this.wa.nonce = data.data.nonce;
+      // Mismo dispositivo reconocido — obtener nonce fresco con la nueva cookie
+      // (el nonce del fingerprint login tiene mismatch de session token)
+      const freshBoot = await this.wa.getBootstrap();
+      if (freshBoot.nonce) this.wa.nonce = freshBoot.nonce;
+
       this.user.display_name = data.data?.display_name || this.user.display_name;
       this.user.level_name   = data.data?.level_name   || this.user.level_name;
       this.updateUserUI();
@@ -143,9 +151,22 @@ class AuthManager {
       await this.wa.registerDevice(deviceName);
 
       App.showMessage('¡Dispositivo registrado!', 'success');
-      await this.doVerify();
+
+      // Fingerprint ya guardado durante el registro — obtener nonce fresco e ir al home
+      // (no hace falta un segundo Face ID: el usuario YA probó identidad en el registro)
+      const freshBoot = await this.wa.getBootstrap();
+      if (freshBoot.nonce) this.wa.nonce = freshBoot.nonce;
+      this.isReady = true;
+      App.goTo('home');
 
     } catch (err) {
+      // Si el servidor (o el cliente) dice que ya hay dispositivo, ir a verificación
+      if (err.message?.toLowerCase().includes('ya tiene un dispositivo') ||
+          err.message?.toLowerCase().includes('slot_full')) {
+        App.showMessage('Dispositivo ya registrado. Verificando identidad…', 'info');
+        await this.doVerify();
+        return;
+      }
       console.error('[Auth] register error:', err);
       App.showMessage(err.message || 'Error al registrar dispositivo.', 'error');
       btn.disabled    = false;
