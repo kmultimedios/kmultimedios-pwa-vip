@@ -1,10 +1,10 @@
 /**
- * App Principal – KMultimedios VIP PWA v2.0
+ * App Principal – KMultimedios VIP Windows (vaderwin)
+ * Optimizado para escritorio: incluye radio, layout amplio.
  */
 
 const API_BASE = '/wp-json/pwa/v1';
 
-// ── App Controller ────────────────────────────────────────────────────────────
 const App = {
   currentScreen: null,
 
@@ -16,7 +16,6 @@ const App = {
     window.scrollTo(0, 0);
   },
 
-  // Navegar entre secciones principales con carga lazy
   goTo(section) {
     const screenMap = {
       home:     'home',
@@ -58,52 +57,14 @@ const App = {
   },
 };
 
-// Registro sin biometría — usa fingerprint del dispositivo
-async function skipBiometricRegistration() {
-  const btn = document.getElementById('skip-register-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Registrando…'; }
-  try {
-    const nameInput  = document.getElementById('device-name-input');
-    const deviceName = nameInput?.value?.trim() || '';
-    const fp         = await DeviceFingerprint.generate();
-    DeviceFingerprint.save(fp);
-
-    const form = new FormData();
-    form.append('action',      'pwa_register_no_biometric');
-    form.append('fingerprint', fp);
-    form.append('device_name', deviceName);
-    form.append('nonce',       auth.wa.nonce || '');
-
-    const res  = await fetch('/wp-admin/admin-ajax.php', { method: 'POST', credentials: 'include', body: form });
-    const data = await res.json();
-
-    if (data.success) {
-      App.showToast('Dispositivo registrado.', 'success');
-      auth.isReady = true;
-      App.goTo('home');
-    } else {
-      throw new Error(data.data?.message || 'Error al registrar');
-    }
-  } catch (err) {
-    App.showToast(err.message || 'Error al registrar dispositivo.', 'error');
-    if (btn) { btn.disabled = false; btn.textContent = 'Continuar sin biometría'; }
-  }
-}
-
-// ── Camera View ───────────────────────────────────────────────────────────────
 const CameraView = {
   loaded: false,
-  load() {
-    if (this.loaded) return;
-    this.loaded = true;
-    CommandCenter.load();
-  },
+  load() { if (this.loaded) return; this.loaded = true; CommandCenter.load(); },
 };
 
-// ── Video View ────────────────────────────────────────────────────────────────
 const VideoView = {
   loaded: false,
-  hls: null,
+  hls:    null,
   load() {
     if (this.loaded) return;
     this.loaded = true;
@@ -118,29 +79,22 @@ const VideoView = {
       this.hls.attachMedia(video);
       this.hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Safari nativo
       video.src = src;
       video.play().catch(() => {});
     }
   },
 };
 
-// ── Radio View ────────────────────────────────────────────────────────────────
 const RadioView = {
   loaded: false,
-  load() {
-    if (this.loaded) return;
-    this.loaded = true;
-    RadioPlayer.init();
-  },
+  load() { if (this.loaded) return; this.loaded = true; RadioPlayer.init(); },
 };
 
-// ── Settings View ─────────────────────────────────────────────────────────────
 const SettingsView = {
   render() {
     const container = document.getElementById('panel-settings');
     if (!container) return;
-    const user = auth?.user;
+    const user    = auth?.user;
     const initial = (user?.display_name || '?')[0].toUpperCase();
 
     container.innerHTML = `
@@ -156,7 +110,7 @@ const SettingsView = {
       <div class="settings-section">
         <p class="settings-section__label">DISPOSITIVOS</p>
         <button class="settings-item" onclick="App.goTo('devices')">
-          <span class="settings-item__icon">📲</span>
+          <span class="settings-item__icon">💻</span>
           <div class="settings-item__info">
             <span class="settings-item__title">Mis Dispositivos</span>
             <span class="settings-item__sub">Ver y gestionar tus dispositivos registrados</span>
@@ -198,57 +152,18 @@ const SettingsView = {
         </a>
       </div>
 
-      <p class="settings-version">KMultimedios VIP · v2.1</p>
+      <p class="settings-version">KMultimedios VIP Windows · v1.0</p>
     `;
   },
 };
-
-// ── PWA Install ───────────────────────────────────────────────────────────────
-let deferredInstallPrompt = null;
-
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredInstallPrompt = e;
-  const banner = document.getElementById('install-banner');
-  if (banner) banner.hidden = false;
-});
-
-window.addEventListener('appinstalled', () => {
-  deferredInstallPrompt = null;
-  const banner = document.getElementById('install-banner');
-  if (banner) banner.hidden = true;
-  App.showToast('¡App instalada correctamente!', 'success');
-});
-
-// ── iOS Install Banner ────────────────────────────────────────────────────────
-(function () {
-  const isIOS        = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isStandalone = window.navigator.standalone === true;
-  const isSafari     = !/crios|fxios|opios|mercury/i.test(navigator.userAgent);
-
-  if (!isIOS || isStandalone || !isSafari) return;
-  if (sessionStorage.getItem('ios-banner-dismissed')) return;
-
-  setTimeout(() => {
-    const banner = document.getElementById('ios-install-banner');
-    if (banner) banner.hidden = false;
-  }, 2500);
-
-  document.getElementById('ios-install-close')?.addEventListener('click', () => {
-    const banner = document.getElementById('ios-install-banner');
-    if (banner) banner.hidden = true;
-    sessionStorage.setItem('ios-banner-dismissed', '1');
-  });
-}());
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 let wa;
 let auth;
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Service Worker
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/vader/sw.js', { scope: '/vader/' })
+    navigator.serviceWorker.register('/vaderwin/sw.js', { scope: '/vaderwin/' })
       .then(r => console.log('[SW] scope:', r.scope))
       .catch(e => console.warn('[SW] error:', e));
   }
@@ -256,17 +171,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   wa   = new WebAuthnManager(API_BASE);
   auth = new AuthManager(wa);
 
-  // ── Navegación global por data-section ──────────────────────────────────
   document.querySelectorAll('[data-section]').forEach(el => {
     el.addEventListener('click', () => App.goTo(el.dataset.section));
   });
 
-  // ── Botones de autenticación ─────────────────────────────────────────────
-  document.getElementById('register-btn')?.addEventListener('click',    () => auth.doRegister());
-  document.getElementById('retry-btn')?.addEventListener('click',        () => auth.init());
-  document.getElementById('verify-retry-btn')?.addEventListener('click', () => auth.doVerify());
+  document.getElementById('register-btn')?.addEventListener('click',      () => auth.doRegister());
+  document.getElementById('retry-btn')?.addEventListener('click',          () => auth.init());
+  document.getElementById('verify-retry-btn')?.addEventListener('click',   () => auth.doVerify());
 
-  // ── Modal confirmación eliminar ──────────────────────────────────────────
   document.getElementById('modal-confirm-btn')?.addEventListener('click', () => auth.confirmDelete());
   document.getElementById('modal-cancel-btn')?.addEventListener('click',  () => {
     document.getElementById('modal-overlay')?.classList.remove('modal--open');
@@ -279,19 +191,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // ── Botón instalar ───────────────────────────────────────────────────────
-  document.getElementById('install-btn')?.addEventListener('click', async () => {
-    if (!deferredInstallPrompt) {
-      App.showToast('Abre el menú del navegador y selecciona "Instalar app".', 'info', 5000);
-      return;
-    }
-    deferredInstallPrompt.prompt();
-    const { outcome } = await deferredInstallPrompt.userChoice;
-    if (outcome === 'accepted') App.showToast('Instalando app…', 'success');
-    deferredInstallPrompt = null;
-  });
-
-  // ── Botón Iniciar Sesión: forzar navegación en standalone ───────────────
   document.getElementById('screen-login-required')
     ?.querySelectorAll('a[href*="wp-login"]')
     .forEach(link => {
@@ -301,7 +200,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   await auth.init();
 });
 
-// Contenedor de toasts
 document.addEventListener('DOMContentLoaded', () => {
   if (!document.getElementById('toasts')) {
     const t = document.createElement('div');

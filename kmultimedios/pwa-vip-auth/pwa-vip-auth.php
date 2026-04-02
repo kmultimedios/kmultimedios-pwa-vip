@@ -1,0 +1,245 @@
+<?php
+/**
+ * Plugin Name: PWA VIP Auth - KMultimedios
+ * Plugin URI:  https://kmultimedios.com
+ * Description: PWA con autenticación WebAuthn para usuarios VIP de Paid Memberships Pro.
+ *              Restringe la instalación a UN solo dispositivo por usuario.
+ * Version:     1.2.0
+ * Author:      KMultimedios
+ * Author URI:  https://kmultimedios.com
+ * Text Domain: pwa-vip-auth
+ * Requires PHP: 8.0
+ */
+
+defined('ABSPATH') || exit;
+
+define('PWA_VIP_VERSION',  '1.2.0');
+define('PWA_VIP_DIR',      plugin_dir_path(__FILE__));
+define('PWA_VIP_URL',      plugin_dir_url(__FILE__));
+define('PWA_VIP_BASENAME', plugin_basename(__FILE__));
+
+// ── Autoload de clases ──────────────────────────────────────────────────────
+require_once PWA_VIP_DIR . 'includes/class-database.php';
+require_once PWA_VIP_DIR . 'includes/class-webauthn.php';
+require_once PWA_VIP_DIR . 'includes/class-pmp-integration.php';
+require_once PWA_VIP_DIR . 'includes/class-streams.php';
+require_once PWA_VIP_DIR . 'includes/class-api.php';
+require_once PWA_VIP_DIR . 'admin/admin-page.php';
+
+// ── Activación / Desactivación ──────────────────────────────────────────────
+register_activation_hook(__FILE__, ['PWA_Database', 'install']);
+register_deactivation_hook(__FILE__, '__return_true');
+
+// ── Migración de BD al actualizar versión ───────────────────────────────────
+add_action('plugins_loaded', function () {
+    if (get_option('pwa_vip_db_version') !== PWA_VIP_VERSION) {
+        PWA_Database::install();
+    }
+});
+
+// ── Bootstrap ───────────────────────────────────────────────────────────────
+add_action('plugins_loaded', 'pwa_vip_auth_init');
+
+function pwa_vip_auth_init(): void {
+    // REST API
+    add_action('rest_api_init', ['PWA_API', 'register_routes']);
+
+    // Admin
+    if (is_admin()) {
+        PWA_Admin::init();
+    }
+
+    // Shortcode [pwa_download_link]
+    add_shortcode('pwa_download_link', 'pwa_vip_download_shortcode');
+
+    // Cabeceras CORS para la PWA (solo en rutas /wp-json/vader/)
+    add_action('rest_api_init', 'pwa_vip_cors_headers', 15);
+
+    // Inyectar nonce en la URL al redirigir desde login hacia /vader/
+    add_filter('login_redirect', 'pwa_vip_inject_nonce_on_redirect', 10, 3);
+
+    // AJAX bootstrap: permite que la PWA obtenga nonce + estado sin necesitar nonce previo
+    add_action('wp_ajax_pwa_bootstrap',        'pwa_vip_ajax_bootstrap');
+    add_action('wp_ajax_nopriv_pwa_bootstrap', 'pwa_vip_ajax_bootstrap');
+
+    // AJAX fingerprint login: establece sesión completa (cookies funcionan bien en admin-ajax)
+    add_action('wp_ajax_nopriv_pwa_fingerprint_login', 'pwa_fingerprint_login_handler');
+    add_action('wp_ajax_pwa_fingerprint_login',        'pwa_fingerprint_login_handler');
+
+    // AJAX registro sin biometría: registra dispositivo usando solo fingerprint
+    add_action('wp_ajax_pwa_register_no_biometric', 'pwa_register_no_biometric_handler');
+}
+
+function pwa_vip_inject_nonce_on_redirect(string $redirect_to, string $requested, $user): string {
+    $is_pwa = strpos($redirect_to, '/vader/') !== false
+           || strpos($redirect_to, '/vaderapp/') !== false
+           || strpos($redirect_to, '/vaderwin/') !== false;
+    if (!is_wp_error($user) && $is_pwa) {
+        $nonce       = wp_create_nonce('wp_rest');
+        $redirect_to = add_query_arg('_pwa_nonce', $nonce, $redirect_to);
+    }
+    return $redirect_to;
+}
+
+function pwa_vip_ajax_bootstrap(): void {
+    if (!is_user_logged_in()) {
+        wp_send_json([
+            'is_logged_in' => false,
+            'is_vip'       => false,
+            'nonce'        => '',
+        ]);
+    }
+
+    $user_id = get_current_user_id();
+    $is_vip  = PWA_PMP::is_vip($user_id);
+    $user    = wp_get_current_user();
+
+    wp_send_json([
+        'is_logged_in' => true,
+        'is_vip'       => $is_vip,
+        'nonce'        => $is_vip ? wp_create_nonce('wp_rest') : '',
+        'user_id'      => $user_id,
+        'display_name' => $user->display_name,
+        'email'        => $user->user_email,
+    ]);
+}
+
+// ── Fingerprint login via admin-ajax ────────────────────────────────────────
+function pwa_fingerprint_login_handler(): void {
+    $user_id     = (int) ($_POST['user_id']     ?? 0);
+    $fingerprint = sanitize_text_field($_POST['fingerprint'] ?? '');
+
+    if (!$user_id || !$fingerprint) {
+        wp_send_json_error(['message' => 'Datos requeridos.'], 400);
+    }
+
+    if (!PWA_PMP::is_vip($user_id)) {
+        wp_send_json_error(['message' => 'Acceso VIP requerido.'], 403);
+    }
+
+    $device = PWA_Database::get_device_by_fingerprint($user_id, $fingerprint);
+    if (!$device) {
+        wp_send_json_error(['message' => 'Dispositivo no reconocido.'], 404);
+    }
+
+    // Actualizar last_access y establecer sesión completa
+    PWA_Database::update_fingerprint((int) $device->id, $fingerprint);
+    wp_set_current_user($user_id);
+    wp_set_auth_cookie($user_id, true);
+
+    $user  = get_userdata($user_id);
+    $nonce = wp_create_nonce('wp_rest');
+
+    PWA_Database::log_audit('fingerprint_login', $user_id, [
+        'device_type' => $device->device_type,
+        'device_name' => $device->device_name,
+    ]);
+
+    wp_send_json_success([
+        'device_type'  => $device->device_type,
+        'device_name'  => $device->device_name,
+        'display_name' => $user ? $user->display_name : '',
+        'level_name'   => PWA_PMP::get_level_name($user_id),
+        'nonce'        => $nonce,
+    ]);
+}
+
+// ── Registro sin biometría ───────────────────────────────────────────────────
+function pwa_register_no_biometric_handler(): void {
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['message' => 'No autenticado.'], 401);
+    }
+
+    $user_id     = get_current_user_id();
+    $fingerprint = sanitize_text_field($_POST['fingerprint'] ?? '');
+    $device_name = sanitize_text_field($_POST['device_name'] ?? '');
+
+    if (!$fingerprint) {
+        wp_send_json_error(['message' => 'Datos requeridos.'], 400);
+    }
+
+    if (!PWA_PMP::is_vip($user_id)) {
+        wp_send_json_error(['message' => 'Acceso VIP requerido.'], 403);
+    }
+
+    // Detectar tipo de dispositivo
+    $ua          = $_SERVER['HTTP_USER_AGENT'] ?? '';
+    $device_type = (preg_match('/Android|iPhone|iPad|iPod|Mobile/i', $ua)) ? 'mobile' : 'desktop';
+
+    // Verificar si ya tiene dispositivo en esta ranura
+    $existing = PWA_Database::get_device_by_user_and_type($user_id, $device_type);
+    if ($existing) {
+        wp_send_json_error(['message' => 'Ya tienes un dispositivo registrado en esta ranura.'], 409);
+    }
+
+    // Registrar dispositivo sin credencial WebAuthn
+    $result = PWA_Database::save_device(
+        $user_id,
+        $device_type,
+        '',   // credential_id vacío
+        '',   // public_key vacío
+        $device_name ?: ($device_type === 'mobile' ? 'Móvil' : 'Escritorio'),
+        $fingerprint
+    );
+
+    if (!$result) {
+        wp_send_json_error(['message' => 'Error al guardar dispositivo.'], 500);
+    }
+
+    PWA_Database::log_audit('register_no_biometric', $user_id, [
+        'device_type' => $device_type,
+        'device_name' => $device_name,
+    ]);
+
+    $user = get_userdata($user_id);
+    wp_send_json_success([
+        'message'     => 'Dispositivo registrado.',
+        'device_type' => $device_type,
+        'display_name'=> $user ? $user->display_name : '',
+        'level_name'  => PWA_PMP::get_level_name($user_id),
+        'nonce'       => wp_create_nonce('wp_rest'),
+    ]);
+}
+
+// ── Shortcode ────────────────────────────────────────────────────────────────
+function pwa_vip_download_shortcode(array $atts = []): string {
+    $atts = shortcode_atts(['texto' => 'Instalar App VIP'], $atts);
+
+    if (!is_user_logged_in()) {
+        return '<p class="pwa-notice">Debes <a href="' . wp_login_url(get_permalink()) . '">iniciar sesión</a> para acceder.</p>';
+    }
+
+    $user_id = get_current_user_id();
+
+    if (!PWA_PMP::is_vip($user_id)) {
+        return '<p class="pwa-notice pwa-notice--error">Esta función es exclusiva para miembros VIP.</p>';
+    }
+
+    $pwa_url   = home_url('/vader/');
+    $has_device = PWA_Database::user_has_device($user_id);
+    $label     = esc_html($atts['texto']);
+
+    if ($has_device) {
+        return '<div class="pwa-install-wrap">
+            <a href="' . esc_url($pwa_url) . '" class="pwa-btn pwa-btn--open">Abrir App VIP</a>
+            <p class="pwa-notice pwa-notice--info">Dispositivo registrado. Si cambiaste de equipo, contacta soporte.</p>
+        </div>';
+    }
+
+    return '<div class="pwa-install-wrap">
+        <a href="' . esc_url($pwa_url) . '" class="pwa-btn pwa-btn--install">' . $label . '</a>
+    </div>';
+}
+
+// ── CORS ────────────────────────────────────────────────────────────────────
+function pwa_vip_cors_headers(): void {
+    $origin = get_http_origin();
+    $allowed = [home_url(), 'https://kmultimedios.com', 'https://www.kmultimedios.com'];
+
+    if (in_array($origin, $allowed, true)) {
+        header('Access-Control-Allow-Origin: ' . esc_url_raw($origin));
+        header('Access-Control-Allow-Credentials: true');
+        header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, X-WP-Nonce');
+    }
+}

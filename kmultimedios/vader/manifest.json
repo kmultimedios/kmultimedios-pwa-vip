@@ -1,0 +1,17 @@
+{
+  "name": "Vader – KMultimedios VIP",
+  "short_name": "Vader",
+  "description": "Cámaras fronterizas exclusivas en tiempo real para miembros VIP de KMultimedios.",
+  "start_url": "/vader/",
+  "scope": "/vader/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#06000f",
+  "theme_color": "#b026ff",
+  "icons": [
+    { "src": "/vader/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/vader/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["entertainment", "news"],
+  "lang": "es-MX"
+}

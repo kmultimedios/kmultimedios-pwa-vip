@@ -1,10 +1,11 @@
 /**
- * App Principal – KMultimedios VIP PWA v2.0
+ * App Principal – KMultimedios VIP Android (vaderapp)
+ * Sin radios. Autenticación por fingerprint únicamente.
  */
 
 const API_BASE = '/wp-json/pwa/v1';
 
-// ── App Controller ────────────────────────────────────────────────────────────
+// ── App Controller ─────────────────────────────────────────────────────────────
 const App = {
   currentScreen: null,
 
@@ -16,13 +17,11 @@ const App = {
     window.scrollTo(0, 0);
   },
 
-  // Navegar entre secciones principales con carga lazy
   goTo(section) {
     const screenMap = {
       home:     'home',
       cameras:  'main',
       video:    'video',
-      radio:    'radio',
       settings: 'settings',
       devices:  'devices',
     };
@@ -30,7 +29,6 @@ const App = {
 
     if (section === 'cameras')  CameraView.load();
     if (section === 'video')    VideoView.load();
-    if (section === 'radio')    RadioView.load();
     if (section === 'settings') SettingsView.render();
     if (section === 'devices')  auth.initDevicesPanel();
   },
@@ -58,38 +56,6 @@ const App = {
   },
 };
 
-// Registro sin biometría — usa fingerprint del dispositivo
-async function skipBiometricRegistration() {
-  const btn = document.getElementById('skip-register-btn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Registrando…'; }
-  try {
-    const nameInput  = document.getElementById('device-name-input');
-    const deviceName = nameInput?.value?.trim() || '';
-    const fp         = await DeviceFingerprint.generate();
-    DeviceFingerprint.save(fp);
-
-    const form = new FormData();
-    form.append('action',      'pwa_register_no_biometric');
-    form.append('fingerprint', fp);
-    form.append('device_name', deviceName);
-    form.append('nonce',       auth.wa.nonce || '');
-
-    const res  = await fetch('/wp-admin/admin-ajax.php', { method: 'POST', credentials: 'include', body: form });
-    const data = await res.json();
-
-    if (data.success) {
-      App.showToast('Dispositivo registrado.', 'success');
-      auth.isReady = true;
-      App.goTo('home');
-    } else {
-      throw new Error(data.data?.message || 'Error al registrar');
-    }
-  } catch (err) {
-    App.showToast(err.message || 'Error al registrar dispositivo.', 'error');
-    if (btn) { btn.disabled = false; btn.textContent = 'Continuar sin biometría'; }
-  }
-}
-
 // ── Camera View ───────────────────────────────────────────────────────────────
 const CameraView = {
   loaded: false,
@@ -103,7 +69,7 @@ const CameraView = {
 // ── Video View ────────────────────────────────────────────────────────────────
 const VideoView = {
   loaded: false,
-  hls: null,
+  hls:    null,
   load() {
     if (this.loaded) return;
     this.loaded = true;
@@ -118,20 +84,9 @@ const VideoView = {
       this.hls.attachMedia(video);
       this.hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => {}));
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      // Safari nativo
       video.src = src;
       video.play().catch(() => {});
     }
-  },
-};
-
-// ── Radio View ────────────────────────────────────────────────────────────────
-const RadioView = {
-  loaded: false,
-  load() {
-    if (this.loaded) return;
-    this.loaded = true;
-    RadioPlayer.init();
   },
 };
 
@@ -140,7 +95,7 @@ const SettingsView = {
   render() {
     const container = document.getElementById('panel-settings');
     if (!container) return;
-    const user = auth?.user;
+    const user    = auth?.user;
     const initial = (user?.display_name || '?')[0].toUpperCase();
 
     container.innerHTML = `
@@ -198,12 +153,12 @@ const SettingsView = {
         </a>
       </div>
 
-      <p class="settings-version">KMultimedios VIP · v2.1</p>
+      <p class="settings-version">KMultimedios VIP Android · v1.0</p>
     `;
   },
 };
 
-// ── PWA Install ───────────────────────────────────────────────────────────────
+// ── PWA Install (Android) ─────────────────────────────────────────────────────
 let deferredInstallPrompt = null;
 
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -220,27 +175,6 @@ window.addEventListener('appinstalled', () => {
   App.showToast('¡App instalada correctamente!', 'success');
 });
 
-// ── iOS Install Banner ────────────────────────────────────────────────────────
-(function () {
-  const isIOS        = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isStandalone = window.navigator.standalone === true;
-  const isSafari     = !/crios|fxios|opios|mercury/i.test(navigator.userAgent);
-
-  if (!isIOS || isStandalone || !isSafari) return;
-  if (sessionStorage.getItem('ios-banner-dismissed')) return;
-
-  setTimeout(() => {
-    const banner = document.getElementById('ios-install-banner');
-    if (banner) banner.hidden = false;
-  }, 2500);
-
-  document.getElementById('ios-install-close')?.addEventListener('click', () => {
-    const banner = document.getElementById('ios-install-banner');
-    if (banner) banner.hidden = true;
-    sessionStorage.setItem('ios-banner-dismissed', '1');
-  });
-}());
-
 // ── Init ──────────────────────────────────────────────────────────────────────
 let wa;
 let auth;
@@ -248,7 +182,7 @@ let auth;
 document.addEventListener('DOMContentLoaded', async () => {
   // Service Worker
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/vader/sw.js', { scope: '/vader/' })
+    navigator.serviceWorker.register('/vaderapp/sw.js', { scope: '/vaderapp/' })
       .then(r => console.log('[SW] scope:', r.scope))
       .catch(e => console.warn('[SW] error:', e));
   }
@@ -256,17 +190,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   wa   = new WebAuthnManager(API_BASE);
   auth = new AuthManager(wa);
 
-  // ── Navegación global por data-section ──────────────────────────────────
+  // Navegación global
   document.querySelectorAll('[data-section]').forEach(el => {
     el.addEventListener('click', () => App.goTo(el.dataset.section));
   });
 
-  // ── Botones de autenticación ─────────────────────────────────────────────
-  document.getElementById('register-btn')?.addEventListener('click',    () => auth.doRegister());
-  document.getElementById('retry-btn')?.addEventListener('click',        () => auth.init());
-  document.getElementById('verify-retry-btn')?.addEventListener('click', () => auth.doVerify());
+  // Botones de autenticación
+  document.getElementById('register-btn')?.addEventListener('click',      () => auth.doRegister());
+  document.getElementById('retry-btn')?.addEventListener('click',          () => auth.init());
+  document.getElementById('reregister-btn')?.addEventListener('click',     () => auth.doReRegister());
+  document.getElementById('verify-retry-btn')?.addEventListener('click',   () => auth.init());
 
-  // ── Modal confirmación eliminar ──────────────────────────────────────────
+  // Modal eliminar dispositivo
   document.getElementById('modal-confirm-btn')?.addEventListener('click', () => auth.confirmDelete());
   document.getElementById('modal-cancel-btn')?.addEventListener('click',  () => {
     document.getElementById('modal-overlay')?.classList.remove('modal--open');
@@ -279,10 +214,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // ── Botón instalar ───────────────────────────────────────────────────────
+  // Botón instalar (Android install banner)
   document.getElementById('install-btn')?.addEventListener('click', async () => {
     if (!deferredInstallPrompt) {
-      App.showToast('Abre el menú del navegador y selecciona "Instalar app".', 'info', 5000);
+      App.showToast('Abre el menú del navegador y selecciona "Agregar a pantalla de inicio".', 'info', 5000);
       return;
     }
     deferredInstallPrompt.prompt();
@@ -291,7 +226,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     deferredInstallPrompt = null;
   });
 
-  // ── Botón Iniciar Sesión: forzar navegación en standalone ───────────────
+  // Link de login: forzar navegación en standalone
   document.getElementById('screen-login-required')
     ?.querySelectorAll('a[href*="wp-login"]')
     .forEach(link => {

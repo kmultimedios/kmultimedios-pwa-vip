@@ -1,0 +1,36 @@
+{
+  "name": "KMultimedios VIP",
+  "short_name": "KM VIP",
+  "description": "Acceso exclusivo al contenido VIP de KMultimedios — Windows",
+  "start_url": "/vaderwin/",
+  "scope": "/vaderwin/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0a0a",
+  "theme_color": "#e63946",
+  "lang": "es",
+  "categories": ["entertainment", "news"],
+  "icons": [
+    { "src": "/vader/icons/icon-72.png",  "sizes": "72x72",   "type": "image/png", "purpose": "any" },
+    { "src": "/vader/icons/icon-96.png",  "sizes": "96x96",   "type": "image/png", "purpose": "any" },
+    { "src": "/vader/icons/icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
+    { "src": "/vader/icons/icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
+    { "src": "/vader/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable any" },
+    { "src": "/vader/icons/icon-384.png", "sizes": "384x384", "type": "image/png", "purpose": "any" },
+    { "src": "/vader/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable any" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Cámaras en Vivo",
+      "short_name": "Cámaras",
+      "url": "/vaderwin/#cameras",
+      "icons": [{ "src": "/vader/icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Video",
+      "short_name": "Video",
+      "url": "/vaderwin/#video",
+      "icons": [{ "src": "/vader/icons/icon-96.png", "sizes": "96x96" }]
+    }
+  ]
+}
